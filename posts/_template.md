@@ -1,0 +1,31 @@
+---
+id: exp-XXX
+title: 実験のタイトル
+date: 2025-MM-DD
+tags: [Tag1, Tag2]
+image: ../images/
+summary: 一覧に表示される短い説明文（要約）
+links:
+  - label: GitHub
+    url: https://github.com/...
+  - label: Demo
+    url: https://...
+---
+
+## Goal
+実験の目的や背景をここに書きます。
+
+## Steps
+1. 手順1
+2. 手順2
+   - 詳細なステップ
+   - コードブロックなども使えます
+
+```python
+print("Hello, World!")
+```
+
+## Result
+結果や考察をここに書きます。
+- 箇条書き
+- **太字** なども有効です。

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI実験室 | AI Experimental Lab</title>
+    <meta name="description" content="個人的なAI実験やプロジェクトをまとめた実験室。LLM、画像生成、強化学習などの記録。">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts: Inter (本文) と JetBrains Mono (コード/タグ) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container header-inner">
+            <h1 class="site-title"><a href="#">AI Experimental Lab.</a></h1>
+            <nav class="site-nav">
+                <ul>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#experiments">Experiments</a></li>
+                    <li><a href="#log">Log</a></li>
+                    <li><a href="#links">Links</a></li>
+                </ul>
+                <button id="theme-toggle" aria-label="Toggle Dark Mode">
+                    <span class="toggle-icon">🌙</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <p class="hero-subtitle">Personal AI Archive</p>
+            <h2 class="hero-title">今日もこっそり<br>AI で遊ぶ実験室。</h2>
+            <p class="hero-description">
+                思いつきで試したLLMのプロンプト、画像生成のモデル学習、<br>
+                小さなツールの開発ログなどを雑多に並べています。
+            </p>
+            <a href="#experiments" class="btn btn-primary">最新の実験を見る ↓</a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+        <div class="container">
+            <h3 class="section-title">About</h3>
+            <div class="about-content">
+                <p>
+                    ここは、私（Author）が日々のAI学習や開発の中で作ったものを記録しておくための個人的な実験室です。<br>
+                    成功したものだけでなく、失敗した実験や途中のアイデアもアーカイブしています。
+                </p>
+                <div class="about-tags">
+                    <h4>主な実験カテゴリ:</h4>
+                    <ul>
+                        <li>🤖 <strong>LLM & RAG</strong>: テキスト生成、検索拡張、プロンプトエンジニアリング</li>
+                        <li>🎨 <strong>Vision & GenAI</strong>: 画像生成、LoRA学習、画像処理</li>
+                        <li>🛠️ <strong>Tooling</strong>: AIを活用した開発ツール、自動化スクリプト</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experiments Section -->
+    <section id="experiments" class="section">
+        <div class="container">
+            <h3 class="section-title">Experiments</h3>
+            <div id="experiments-grid" class="experiments-grid">
+                <!-- JSでここにカードが生成されます -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Lab Log Section -->
+    <section id="log" class="section">
+        <div class="container">
+            <h3 class="section-title">Lab Log</h3>
+            <div id="lab-log-list" class="lab-log-list">
+                <!-- JSでここにログが生成されます -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Links Section -->
+    <section id="links" class="section">
+        <div class="container">
+            <h3 class="section-title">Links</h3>
+            <div class="links-list">
+                <a href="#" target="_blank" class="link-item">
+                    <span class="link-label">GitHub</span>
+                    <span class="link-desc">AI_warehouse (Repo)</span>
+                </a>
+                <a href="#" target="_blank" class="link-item">
+                    <span class="link-label">Note</span>
+                    <span class="link-desc">技術記事・考察など</span>
+                </a>
+                <a href="#" target="_blank" class="link-item">
+                    <span class="link-label">X (Twitter)</span>
+                    <span class="link-desc">日々のつぶやき</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Add (Maintenance Guide) -->
+    <section class="maintenance-guide">
+        <div class="container">
+            <details>
+                <summary>How to add a new experiment</summary>
+                <p>
+                    <code>experiments.js</code> を開き、<code>experiments</code> 配列に新しいオブジェクトを追加してください。<br>
+                    画像や詳細ページを別途用意する必要はありません。データ追加だけでカードと詳細モーダルが自動生成されます。
+                </p>
+            </details>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <!DOCTYPE html>
+    <html lang="ja">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI実験室 | AI Experimental Lab</title>
+        <meta name="description" content="個人的なAI実験やプロジェクトをまとめた実験室。LLM、画像生成、強化学習などの記録。">
+        <link rel="stylesheet" href="style.css">
+        <!-- Google Fonts: Inter (本文) と JetBrains Mono (コード/タグ) -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+            rel="stylesheet">
+    </head>
+
+    <body>
+
+        <!-- Header -->
+        <header class="site-header">
+            <div class="container header-inner">
+                <h1 class="site-title"><a href="#">AI Experimental Lab.</a></h1>
+                <nav class="site-nav">
+                    <ul>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#experiments">Experiments</a></li>
+                        <li><a href="#log">Log</a></li>
+                        <li><a href="#links">Links</a></li>
+                    </ul>
+                    <button id="theme-toggle" aria-label="Toggle Dark Mode">
+                        <span class="toggle-icon">🌙</span>
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container hero-content">
+                <p class="hero-subtitle">Personal AI Archive</p>
+                <h2 class="hero-title">今日もこっそり<br>AI で遊ぶ実験室。</h2>
+                <p class="hero-description">
+                    思いつきで試したLLMのプロンプト、画像生成のモデル学習、<br>
+                    小さなツールの開発ログなどを雑多に並べています。
+                </p>
+                <a href="#experiments" class="btn btn-primary">最新の実験を見る ↓</a>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="section">
+            <div class="container">
+                <h3 class="section-title">About</h3>
+                <div class="about-content">
+                    <p>
+                        ここは、私（Author）が日々のAI学習や開発の中で作ったものを記録しておくための個人的な実験室です。<br>
+                        成功したものだけでなく、失敗した実験や途中のアイデアもアーカイブしています。
+                    </p>
+                    <div class="about-tags">
+                        <h4>主な実験カテゴリ:</h4>
+                        <ul>
+                            <li>🤖 <strong>LLM & RAG</strong>: テキスト生成、検索拡張、プロンプトエンジニアリング</li>
+                            <li>🎨 <strong>Vision & GenAI</strong>: 画像生成、LoRA学習、画像処理</li>
+                            <li>🛠️ <strong>Tooling</strong>: AIを活用した開発ツール、自動化スクリプト</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Experiments Section -->
+        <section id="experiments" class="section">
+            <div class="container">
+                <h3 class="section-title">Experiments</h3>
+                <div id="experiments-grid" class="experiments-grid">
+                    <!-- JSでここにカードが生成されます -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Lab Log Section -->
+        <section id="log" class="section">
+            <div class="container">
+                <h3 class="section-title">Lab Log</h3>
+                <div id="lab-log-list" class="lab-log-list">
+                    <!-- JSでここにログが生成されます -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Links Section -->
+        <section id="links" class="section">
+            <div class="container">
+                <h3 class="section-title">Links</h3>
+                <div class="links-list">
+                    <a href="#" target="_blank" class="link-item">
+                        <span class="link-label">GitHub</span>
+                        <span class="link-desc">AI_warehouse (Repo)</span>
+                    </a>
+                    <a href="#" target="_blank" class="link-item">
+                        <span class="link-label">Note</span>
+                        <span class="link-desc">技術記事・考察など</span>
+                    </a>
+                    <a href="#" target="_blank" class="link-item">
+                        <span class="link-label">X (Twitter)</span>
+                        <span class="link-desc">日々のつぶやき</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- How to Add (Maintenance Guide) -->
+        <section class="maintenance-guide">
+            <div class="container">
+                <details>
+                    <summary>How to add a new experiment</summary>
+                    <p>
+                        <code>experiments.js</code> を開き、<code>experiments</code> 配列に新しいオブジェクトを追加してください。<br>
+                        画像や詳細ページを別途用意する必要はありません。データ追加だけでカードと詳細モーダルが自動生成されます。
+                    </p>
+                </details>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="container">
+                <p>&copy; 2025 AI Experimental Lab. All rights reserved.</p>
+            </div>
+        </footer>
+
+        <!-- Modal Template -->
+        <div id="experiment-modal" class="modal hidden">
+            <div class="modal-overlay" id="modal-overlay"></div>
+            <div class="modal-content">
+                <button class="modal-close" id="modal-close">&times;</button>
+                <div class="modal-header">
+                    <span id="modal-date" class="modal-date"></span>
+                    <h2 id="modal-title" class="modal-title"></h2>
+                    <div id="modal-tags" class="modal-tags"></div>
+                </div>
+                <div class="modal-body">
+                    <!-- Content will be injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Scripts -->
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="experiments.js"></script>
+        <script src="script.js"></script>
+    </body>
+
+    </html>
