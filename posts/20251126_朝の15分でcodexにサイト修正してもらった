@@ -1,0 +1,29 @@
+---
+id: exp-002
+title: 朝の15分でcodexにサイト修正してもらった
+date: 2025-11-26
+tags: [codex, website]
+image: ../images/
+summary: 一覧に表示される短い説明文（要約）
+links:
+  - label: GitHub
+    url: https://github.com/...
+  - label: Demo
+    url: https://...
+---
+
+## Goal
+当サイトに貼り付けた画像が右にビヨーンと伸びてしまうのをなんとかする
+
+## Steps
+1. vscodeでフォルダを開く
+2. codexに相談する
+   - 実験記事.mdに貼り付けた画像の横幅はみ出ちゃうんだけどなんとかならない？？
+3. 変更してもらった内容をgithubに pushする
+
+
+
+## Result
+**GPT-5.1-Codex-Maxが速すぎる！！**
+
+
