@@ -1,20 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI実験室 | AI Experimental Lab</title>
-    <meta name="description" content="個人皁E��AI実験やプロジェクトをまとめた実験室、ELM、画像生成、強化学習などの記録、E>
+    <meta name="description" content="個人で行ったAI実験やプロジェクトのアーカイブ。LLM、画像生成、強化学習などの記録。">
     <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts: Inter (本斁E と JetBrains Mono (コーチEタグ) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
 
     <!-- Header -->
@@ -39,12 +34,11 @@
     <section class="hero">
         <div class="container hero-content">
             <p class="hero-subtitle">Personal AI Archive</p>
-            <h2 class="hero-title">今日もこっそり<br>AI で遊�E実験室、E/h2>
+            <h2 class="hero-title">今日もこっそり<br>AIで遊ぶ実験室。</h2>
             <p class="hero-description">
-                思いつきで試したLLMのプロンプト、画像生成�EモチE��学習、Ebr>
-                小さなチE�Eルの開発ログなどを雑多に並べてぁE��す、E
+                思いつきで試したLLMプロンプト、画像生成、強化学習、小さなツール開発のログを雑多にまとめています。
             </p>
-            <a href="#experiments" class="btn btn-primary">最新の実験を見る ↁE/a>
+            <a href="#experiments" class="btn btn-primary">最新の実験を見る →</a>
         </div>
     </section>
 
@@ -54,15 +48,15 @@
             <h3 class="section-title">About</h3>
             <div class="about-content">
                 <p>
-                    ここは、私E��よこぼ�E�が日、E�EAI学習や開発の中で作ったものを記録しておくための個人皁E��実験室です、Ebr>
-                    成功したも�Eだけでなく、失敗した実験や途中のアイチE��もアーカイブしてぁE��す、E
+                    ここは、よこぼーが日々のAI学習や開発で作ったものを記録する個人用の実験室です。
+                    成功・失敗を問わず、途中経過のアイデアもアーカイブしています。
                 </p>
                 <div class="about-tags">
-                    <h4>主な実験カチE��リ:</h4>
+                    <h4>主な実験カテゴリ:</h4>
                     <ul>
-                        <li>🤁E<strong>LLM & RAG</strong>: チE��スト生成、検索拡張、�Eロンプトエンジニアリング</li>
-                        <li>🎨 <strong>Vision & GenAI</strong>: 画像生成、LoRA学習、画像�E琁E/li>
-                        <li>🛠�E�E<strong>Tooling</strong>: AIを活用した開発チE�Eル、�E動化スクリプト</li>
+                        <li>🤖 <strong>LLM & RAG</strong>: テキスト生成、検索拡張、プロンプトエンジニアリング</li>
+                        <li>🎨 <strong>Vision & GenAI</strong>: 画像生成、LoRA学習、画像編集</li>
+                        <li>🛠️ <strong>Tooling</strong>: AIを活用した開発ツール、自動化スクリプト</li>
                     </ul>
                 </div>
             </div>
@@ -74,7 +68,7 @@
         <div class="container">
             <h3 class="section-title">Experiments</h3>
             <div id="experiments-grid" class="experiments-grid">
-                <!-- JSでここにカードが生�EされまぁE-->
+                <!-- JSでカードが動的生成されます -->
             </div>
         </div>
     </section>
@@ -84,7 +78,7 @@
         <div class="container">
             <h3 class="section-title">Lab Log</h3>
             <div id="lab-log-list" class="lab-log-list">
-                <!-- JSでここにログが生成されまぁE-->
+                <!-- JSでログが動的生成されます -->
             </div>
         </div>
     </section>
@@ -100,11 +94,11 @@
                 </a>
                 <a href="#" target="_blank" class="link-item">
                     <span class="link-label">Note</span>
-                    <span class="link-desc">技術記事�E老E��など</span>
+                    <span class="link-desc">技術記事や日記など</span>
                 </a>
                 <a href="#" target="_blank" class="link-item">
                     <span class="link-label">X (Twitter)</span>
-                    <span class="link-desc">日、E�EつぶめE��</span>
+                    <span class="link-desc">日々のつぶやき</span>
                 </a>
             </div>
         </div>
@@ -116,40 +110,39 @@
             <details>
                 <summary>How to add a new experiment</summary>
                 <p>
-                    <code>experiments.js</code> を開き、Ecode>experiments</code> 配�Eに新しいオブジェクトを追加してください、Ebr>
-                    画像や詳細ペ�Eジを別途用意する忁E���Eありません。データ追加だけでカードと詳細モーダルが�E動生成されます、E
+                    <code>experiments.js</code> を開き、<code>experiments</code> 配列に新しいオブジェクトを追加してください。
+                    画像や詳細ページを別途用意する必要はありません。データ追加だけでカードと詳細モーダルが自動生成されます。
                 </p>
             </details>
         </div>
     </section>
 
     <!-- Footer -->
-        <footer class="site-footer">
-            <div class="container">
-                <p>&copy; 2025 AI Experimental Lab. All rights reserved.</p>
-            </div>
-        </footer>
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2025 AI Experimental Lab. All rights reserved.</p>
+        </div>
+    </footer>
 
-        <!-- Modal Template -->
-        <div id="experiment-modal" class="modal hidden">
-            <div class="modal-overlay" id="modal-overlay"></div>
-            <div class="modal-content">
-                <button class="modal-close" id="modal-close">&times;</button>
-                <div class="modal-header">
-                    <span id="modal-date" class="modal-date"></span>
-                    <h2 id="modal-title" class="modal-title"></h2>
-                    <div id="modal-tags" class="modal-tags"></div>
-                </div>
-                <div class="modal-body">
-                    <!-- Content will be injected by JS -->
-                </div>
+    <!-- Modal Template -->
+    <div id="experiment-modal" class="modal hidden">
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <div class="modal-header">
+                <span id="modal-date" class="modal-date"></span>
+                <h2 id="modal-title" class="modal-title"></h2>
+                <div id="modal-tags" class="modal-tags"></div>
+            </div>
+            <div class="modal-body">
+                <!-- Content will be injected by JS -->
             </div>
         </div>
+    </div>
 
-        <!-- Scripts -->
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script src="experiments.js"></script>
-        <script src="script.js"></script>
-    </body>
-
-    </html>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="experiments.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
