@@ -5,6 +5,54 @@
 
 const experiments = [
   {
+    "id": "exp-003",
+    "title": "nanobanana vs probanana",
+    "date": "2025-11-26",
+    "tags": [
+      "Tag1",
+      "Tag2"
+    ],
+    "image": "images",
+    "summary": "一覧に表示される短い説明文（要約）",
+    "detail": {
+      "content": "## Goal\nいま話題のnanobanana pro（probanana）がどれぐらいすごいか試してみる\n\n\n**Nano Banana Pro**がすごいんです。\n\n今回はシンプルに比較です。\n\nプロンプト：サイベリアン（猫）がAIのすごさに驚き、猛勉強し、超高性能アンドロイド（猫型）を作るまでのストーリーを4こま漫画でお願いします。台本はお任せします。\n\n\n#nanobanana\n\n\n\nこれだけでも十分すごいと思うんですが、\n日本語(？)がだいぶ崩れてますね。\nもはや日本語なのかわかりません。\n\n#probanana\n\n\n\n**すごい、すごすぎる**\n\nいやー、本当に、Googleさんマイッチングですよ。\n\n\n\n## Result\nすごすぎる\nとにかくすごいよ\nプロバナナ",
+      "links": [
+        {
+          "label": "GitHub",
+          "url": "https://github.com/..."
+        },
+        {
+          "label": "Demo",
+          "url": "https://..."
+        }
+      ]
+    }
+  },
+  {
+    "id": "exp-002",
+    "title": "朝の10分でcodexにサイト修正してもらった",
+    "date": "2025-11-26",
+    "tags": [
+      "codex",
+      "website"
+    ],
+    "image": "images",
+    "summary": "一覧に表示される短い説明文（要約）",
+    "detail": {
+      "content": "## Goal\n当サイトに貼り付けた画像が右にビヨーンとはみ出てしまうのをなんとかする\n\n\nWebサイトの修正なんて10分もあればできちまうぜ、\nっていう話です。\n昨日はじめて公開した当サイトですが、\n記事に貼り付けた画像がびよーんってはみ出てしまう現象が気がかりで…\n\nおそらくエンジニアの方なら一瞬なんでしょうけど、\nなんせ非エンジニア超初心者のよこぼはそんなことはできません。\n\nそこで、こーでっくすぅ！！（codex）の出番です。\n彼にお願いして修正してもらいました。\n10分かからなかったです。\n\n本当にドラ○もんの世界だなーと感じますね。\n\n\n\n## Steps\n1. vscodeでフォルダを開く\n2. codexに相談する\n   - 実験記事.mdに貼り付けた画像の横幅はみ出ちゃうんだけどなんとかならない？？\n3. 変更してもらった内容をgithubに pushする\n\n\n\n## Result\n**GPT-5.1-Codex-Maxが速すぎる！！**",
+      "links": [
+        {
+          "label": "GitHub",
+          "url": "https://github.com/..."
+        },
+        {
+          "label": "Demo",
+          "url": "https://..."
+        }
+      ]
+    }
+  },
+  {
     "id": "exp-001",
     "title": "Antigravityにwebサイト作ってもらった",
     "date": "2025-11-25",
@@ -12,10 +60,10 @@ const experiments = [
       "Antigravity",
       "GitHub Pages"
     ],
-    "image": "web_images/exp-001-d35e.webp",
+    "image": "web_images/exp-001-572.webp",
     "summary": "Antigravityにwebサイト作ってもらった（これのこと）",
     "detail": {
-      "content": "## Goal\nAntigravityにwebサイト作ってもらった（これのこと）\n\n## Steps\n1. Antigravityをダウンロード\n2. GPTとサイトの構想を話しあう。Antigravity用のプロンプトを作ってもらう\n3. Antigravityに作ってもらう（約30分）\n4. GitHub Pagesにアップ！\n   \n   \nAntigravityはこんな感じの仕様書を作ってくれます。\n![implement](web_images/exp-001-aca1.webp)\n\nこんな相談もできる。対応力がすごい！！\n![antigravity](web_images/exp-001-7276.webp)\n\n\n仕様書と回答は日本語にしてねー、と言ったら、ごめんごめんと言って直してくれる。やさしい。\n\n## Result\n**君が今見ているものがResultだよ**",
+      "content": "## Goal\nAntigravityにwebサイト作ってもらった（これのこと）\n\n## Steps\n1. Antigravityをダウンロード\n2. GPTとサイトの構想を話しあう。Antigravity用のプロンプトを作ってもらう\n3. Antigravityに作ってもらう（約30分）\n4. GitHub Pagesにアップ！\n   \n   \nAntigravityはこんな感じの仕様書を作ってくれます。\n![implement](web_images/exp-001-d663.webp)\n\nこんな相談もできる。対応力がすごい！！\n![antigravity](web_images/exp-001-9dde.webp)\n\n\n仕様書と回答は日本語にしてねー、と言ったら、ごめんごめんと言って直してくれる。やさしい。\n\n## Result\n**君が今見ているものがResultだよ**",
       "links": [
         {
           "label": "Antigravity",
