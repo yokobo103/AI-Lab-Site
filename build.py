@@ -20,7 +20,7 @@ OUTPUT_FILE = ROOT_DIR / 'experiments.js'
 TEMPLATE_FILE = '_template.md'
 
 # 軽量版画像の出力先（ルート直下の web_images/）
-WEB_IMAGE_SUBDIR = 'web_images'
+WEB_IMAGE_SUBDIR = 'posts/web_images'
 WEB_IMAGE_DIR = ROOT_DIR / WEB_IMAGE_SUBDIR
 WEB_IMAGE_DIR.mkdir(exist_ok=True)
 
@@ -87,6 +87,10 @@ def create_web_image(rel_from_root: str, exp_id: str) -> str:
         return rel_from_root
 
     original_abs_path = (ROOT_DIR / rel_from_root).resolve()
+
+    if original_abs_path.is_dir():
+        print(f"[WARN] 画像パスがディレクトリです: {original_abs_path}")
+        return rel_from_root
 
     if not original_abs_path.exists():
         print(f"[WARN] 画像が見つかりません: {original_abs_path}")
