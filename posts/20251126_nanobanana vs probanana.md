@@ -2,14 +2,14 @@
 id: exp-003
 title: nanobanana vs probanana
 date: 2025-11-26
-tags: [Tag1, Tag2]
-image: ../images/
-summary: 一覧に表示される短い説明文（要約）
+tags: [nanobanana, probanana]
+image: ../images/20251126_nanobanana_vs_probanana.png
+summary: もうプロバナナは誰にも止められない
 links:
-  - label: GitHub
-    url: https://github.com/...
-  - label: Demo
-    url: https://...
+  - label: Nano Banana Pro
+    url: https://gemini.google/jp/overview/image-generation/?hl=ja
+  - label: 
+    url: 
 ---
 
 ## Goal
@@ -24,7 +24,7 @@ links:
 
 
 #nanobanana
-
+![alt text](../images/20251126_nanobanana_manga.png)
 
 
 これだけでも十分すごいと思うんですが、
@@ -32,7 +32,7 @@ links:
 もはや日本語なのかわかりません。
 
 #probanana
-
+![alt text](../images/20251126_probanana_manga.png)
 
 
 **すごい、すごすぎる**
