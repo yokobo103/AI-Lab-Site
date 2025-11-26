@@ -582,6 +582,16 @@ ul {
     font-style: italic;
 }
 
+.modal-body img,
+.modal-markdown img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
 /* Card Image */
 .card-image-container {
     width: 100%;
