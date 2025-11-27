@@ -1,4 +1,4 @@
-import os
+﻿import os
 import json
 import re
 import glob
@@ -9,34 +9,34 @@ try:
     from PIL import Image
 except ImportError:
     Image = None
-    print("Warning: Pillow が入っていないので画像の軽量化はスキップされます。")
+    print("Warning: Pillow が見つからないため画像軽量化はスキップされます")
 
-# ルートディレクトリ（この build.py がいる階層）
+# ルートディレクトリ（この build.py がある階層）
 ROOT_DIR = Path(__file__).resolve().parent
 
 # Configuration
 POSTS_DIR = ROOT_DIR / 'posts'
 OUTPUT_FILE = ROOT_DIR / 'experiments.js'
 TEMPLATE_FILE = '_template.md'
+LAB_LOGS_FILE = ROOT_DIR / 'lab_logs.json'
 
-# 軽量版画像の出力先（ルート直下の web_images/）
+# 軽量版画像の出力先（ルート直下の posts/web_images/）
 WEB_IMAGE_SUBDIR = 'posts/web_images'
 WEB_IMAGE_DIR = ROOT_DIR / WEB_IMAGE_SUBDIR
 WEB_IMAGE_DIR.mkdir(exist_ok=True)
 
 
 def normalize_rel_path(path_str: str) -> str:
-    """Windows の \\ を / に統一（JS / Web 用）"""
+    """Windows の \\ を / に統一し Web 用にする"""
     return path_str.replace('\\', '/')
 
 
 def resolve_path(md_filepath: str | Path, original_path_in_md: str) -> str:
     """
-    md ファイル内に書かれているパス（相対）を、
-    「リポジトリルートからの相対パス」に変換する。
+    md ファイル内に書かれたパス（相対/絶対混在）をリポジトリルートからの相対パスに正規化する。
 
     優先順位:
-      1. mdファイルからの相対パス
+      1. md ファイルからの相対パス
       2. ルートからの相対パス
     """
     md_path = Path(md_filepath)
@@ -49,7 +49,7 @@ def resolve_path(md_filepath: str | Path, original_path_in_md: str) -> str:
     if raw.startswith('http://') or raw.startswith('https://') or raw.startswith('data:'):
         return raw
 
-    # 先頭の ./ を削る
+    # 先頭の ./ を削除
     raw_no_dot = raw.lstrip('./')
 
     # 1) md ファイルからの相対
@@ -58,24 +58,21 @@ def resolve_path(md_filepath: str | Path, original_path_in_md: str) -> str:
         rel = cand1.relative_to(ROOT_DIR)
         return normalize_rel_path(str(rel))
 
-    # 2) ルートからの相対として解釈（images/xxx など）
+    # 2) ルートからの相対として解釈 images/xxx など
     cand2 = (ROOT_DIR / raw_no_dot).resolve()
     if cand2.exists():
         rel = cand2.relative_to(ROOT_DIR)
         return normalize_rel_path(str(rel))
 
-    # どこにも無かった場合は、とりあえず「ルートからの相対」として返す
+    # どこにも無かった場合は警告して元のまま返す
     print(f"[WARN] 画像が見つかりません: {ROOT_DIR / raw_no_dot}")
     return raw_no_dot
 
 
 def create_web_image(rel_from_root: str, exp_id: str) -> str:
     """
-    ルート（build.py と同じ階層）からの相対パスを受け取り、
-    軽量版 WebP を web_images/ に出力し、
-    Web で使う相対パス（例: web_images/exp-001-xxxx.webp）を返す。
-
-    - Pillow が無い場合や失敗時は元パスをそのまま返す。
+    ルートからの相対パスを受け取り、軽量版 WebP を web_images/ に出力して返す。
+    Pillow が無い場合や失敗時は元パスをそのまま返す。
     """
     if not rel_from_root:
         return ''
@@ -97,10 +94,9 @@ def create_web_image(rel_from_root: str, exp_id: str) -> str:
         return rel_from_root  # とりあえず元の相対パスのまま返す
 
     if Image is None:
-        # Pillow が無いなら軽量化せずそのまま
         return rel_from_root
 
-    # 出力ファイル名: 実験ID＋元パス hash で一意に
+    # 出力ファイル名: 実験ID + パスのハッシュで一意に
     base = exp_id or os.path.splitext(os.path.basename(rel_from_root))[0]
     out_name = f"{base}-{abs(hash(rel_from_root)) & 0xffff:x}.webp"
     out_abs_path = WEB_IMAGE_DIR / out_name
@@ -117,13 +113,10 @@ def create_web_image(rel_from_root: str, exp_id: str) -> str:
 
 def rewrite_body_images(body: str, md_filepath: str | Path, exp_id: str) -> str:
     """
-    Markdown 本文中の画像を検出して、
-    - ローカル画像パス → 軽量版のパス
-    に書き換える。
-
+    Markdown 本文の画像リンクを検出し、ローカル画像パスを軽量版のパスに書き換える。
     対象: ![alt](path/to/img.png)
     """
-    pattern = re.compile(r'(!\[[^\]]*\]\()([^)]+)(\))')
+    pattern = re.compile(r'(!\[[^\]]*\]\()([^\)]+)(\))')
 
     def repl(match):
         before, path, after = match.groups()
@@ -133,7 +126,7 @@ def rewrite_body_images(body: str, md_filepath: str | Path, exp_id: str) -> str:
         if orig_path.startswith('http://') or orig_path.startswith('https://') or orig_path.startswith('data:'):
             return match.group(0)
 
-        # mdファイルから見たパス → ルートからの相対に解決
+        # mdファイルから見たパス -> ルートからの相対に解決
         rel_from_root = resolve_path(md_filepath, orig_path)
         # 軽量版を作成
         web_rel = create_web_image(rel_from_root, exp_id)
@@ -159,15 +152,15 @@ def parse_md_file(filepath: str | Path):
 
     metadata = {}
     links = []
-    
+
     # tags: [a, b] をパース
     tags_match = re.search(r'tags:\s*\[(.*?)\]', fm_text)
     if tags_match:
-        metadata['tags'] = [t.strip() for t in tags_match.group(1).split(',')]
-    
+        metadata['tags'] = [t.strip() for t in tags_match.group(1).split(',') if t.strip()]
+
     # id, title, date, image, summary をパース
     for field in ['id', 'title', 'date', 'image', 'summary']:
-        field_match = re.search(f'{field}:\s*(.+)', fm_text)
+        field_match = re.search(fr'{field}:\s*(.+)', fm_text)
         if field_match:
             metadata[field] = field_match.group(1).strip()
 
@@ -181,15 +174,14 @@ def parse_md_file(filepath: str | Path):
 
     exp_id = metadata.get('id', '')
 
-    # ★ サムネ用画像（frontmatter の image） → 軽量版パス
+    # frontmatter の image を軽量版パスに
     original_image_rel = metadata.get('image', '')
     web_image_rel = ''
     if original_image_rel:
-        # frontmatter の image 値を md からのパスとして解決
         rel_from_root = resolve_path(filepath, original_image_rel)
         web_image_rel = create_web_image(rel_from_root, exp_id)
 
-    # ★ 本文内の画像リンクを書き換える
+    # 本文の画像リンクを書き換える
     body_rewritten = rewrite_body_images(body, filepath, exp_id)
 
     experiment = {
@@ -207,17 +199,36 @@ def parse_md_file(filepath: str | Path):
     return experiment
 
 
+def load_lab_logs() -> list:
+    """lab_logs.json があれば読み込んで返す。無ければ空リスト。"""
+    if not LAB_LOGS_FILE.exists():
+        print(f"[INFO] {LAB_LOGS_FILE.name} が見つからないため、labLogs は空で出力します。")
+        return []
+
+    try:
+        # UTF-8 BOM 対応（utf-8-sig で読み込む）
+        with LAB_LOGS_FILE.open('r', encoding='utf-8-sig') as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            print(f"[WARN] {LAB_LOGS_FILE.name} の内容が配列ではありません。空で出力します。")
+            return []
+    except Exception as e:
+        print(f"[WARN] {LAB_LOGS_FILE.name} の読み込みに失敗しました: {e}")
+        return []
+
+
 def main():
     experiments = []
-    
+
     # Get all .md files in posts dir
     files = glob.glob(str(POSTS_DIR / '*.md'))
-    
+
     for filepath in files:
         filename = os.path.basename(filepath)
         if filename.startswith('_'):  # Skip template
             continue
-            
+
         print(f"Processing {filename}...")
         exp = parse_md_file(filepath)
         if exp:
@@ -226,6 +237,9 @@ def main():
     # Sort by date desc
     experiments.sort(key=lambda x: x['date'], reverse=True)
 
+    # Lab Logs を外部ファイルから取得
+    lab_logs = load_lab_logs()
+
     js_content = f"""/**
  * AI Experimental Lab - Experiments Data
  * [AUTO-GENERATED] This file is generated by build.py. Do not edit manually.
@@ -233,11 +247,8 @@ def main():
 
 const experiments = {json.dumps(experiments, indent=2, ensure_ascii=False)};
 
-// Lab Logs (Static for now, or could be moved to another file)
-const labLogs = [
-    {{ date: "2025-11-25", content: "Markdown記事管理システムを導入。" }},
-    {{ date: "2025-11-25", content: "サイトを公開しました。GitHub Pagesで運用開始。" }},
-];
+// Lab Logs (managed in lab_logs.json)
+const labLogs = {json.dumps(lab_logs, indent=2, ensure_ascii=False)};
 """
 
     with OUTPUT_FILE.open('w', encoding='utf-8') as f:

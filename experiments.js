@@ -12,10 +12,10 @@ const experiments = [
       "nanobanana",
       "probanana"
     ],
-    "image": "posts/web_images/exp-003-2db0.webp",
+    "image": "posts/web_images/exp-003-282c.webp",
     "summary": "もうプロバナナは誰にも止められない",
     "detail": {
-      "content": "## Goal\nいま話題のnanobanana pro（probanana）がどれぐらいすごいか試してみる\n\n\n**Nano Banana Pro**がすごいんです。\n\n今回はシンプルに比較です。\n\nプロンプト：サイベリアン（猫）がAIのすごさに驚き、猛勉強し、超高性能アンドロイド（猫型）を作るまでのストーリーを4こま漫画でお願いします。台本はお任せします。\n\n\n**nanobanana**\n![alt text](posts/web_images/exp-003-e18a.webp)\n\n\nこれだけでも十分すごいと思うんですが、\n日本語(？)がだいぶ崩れてますね。\nもはや日本語なのかわかりません・・・\n\n\n**probanana**\n![alt text](posts/web_images/exp-003-d83d.webp)\n\n\n**すごい、すごすぎる**\n\nいやー、本当に、Googleさんマイッチングですよ・・・\n\n\n\n\n## Result\nすごすぎる\nとにかくすごいよ\nプロバナナ",
+      "content": "## Goal\nいま話題のnanobanana pro（probanana）がどれぐらいすごいか試してみる\n\n\n**Nano Banana Pro**がすごいんです。\n\n今回はシンプルに比較です。\n\nプロンプト：サイベリアン（猫）がAIのすごさに驚き、猛勉強し、超高性能アンドロイド（猫型）を作るまでのストーリーを4こま漫画でお願いします。台本はお任せします。\n\n\n**nanobanana**\n![alt text](posts/web_images/exp-003-f6a9.webp)\n\n\nこれだけでも十分すごいと思うんですが、\n日本語(？)がだいぶ崩れてますね。\nもはや日本語なのかわかりません・・・\n\n\n**probanana**\n![alt text](posts/web_images/exp-003-fa6b.webp)\n\n\n**すごい、すごすぎる**\n\nいやー、本当に、Googleさんマイッチングですよ・・・\n\n\n\n\n## Result\nすごすぎる\nとにかくすごいよ\nプロバナナ",
       "links": [
         {
           "label": "Nano Banana Pro",
@@ -36,10 +36,10 @@ const experiments = [
       "codex",
       "website"
     ],
-    "image": "posts/web_images/exp-002-ef3.webp",
+    "image": "posts/web_images/exp-002-373.webp",
     "summary": "10分で十分",
     "detail": {
-      "content": "## Goal\n当サイトに貼り付けた画像が右にビヨーンとはみ出てしまうのをなんとかする\n\n\nWebサイトの修正なんて10分もあればできちまうぜ、\nっていう話です。\n昨日はじめて公開した当サイトですが、\n記事に貼り付けた画像がびよーんってはみ出てしまう現象が気がかりで…\n![alt text](posts/web_images/exp-002-369e.webp)\n\n\nおそらくエンジニアの方なら一瞬なんでしょうけど、\nなんせ非エンジニア超初心者のよこぼはそんなことはできません。\n\nそこで、こーでっくすぅ！！（codex）の出番です。\n彼にお願いして修正してもらいました。\n10分かからなかったです。\n![alt text](posts/web_images/exp-002-4845.webp)\n\n本当にドラ○もんの世界だなーと感じますね。\n\n\n\n## Steps\n1. vscodeでフォルダを開く\n2. codexに相談する\n   - 実験記事.mdに貼り付けた画像の横幅はみ出ちゃうんだけどなんとかならない？？\n3. 変更してもらった内容をgithubに pushする\n\n\n\n## Result\n**GPT-5.1-Codex-Maxが速すぎる！！**",
+      "content": "## Goal\n当サイトに貼り付けた画像が右にビヨーンとはみ出てしまうのをなんとかする\n\n\nWebサイトの修正なんて10分もあればできちまうぜ、\nっていう話です。\n昨日はじめて公開した当サイトですが、\n記事に貼り付けた画像がびよーんってはみ出てしまう現象が気がかりで…\n![alt text](posts/web_images/exp-002-34c7.webp)\n\n\nおそらくエンジニアの方なら一瞬なんでしょうけど、\nなんせ非エンジニア超初心者のよこぼはそんなことはできません。\n\nそこで、こーでっくすぅ！！（codex）の出番です。\n彼にお願いして修正してもらいました。\n10分かからなかったです。\n![alt text](posts/web_images/exp-002-1599.webp)\n\n本当にドラ○もんの世界だなーと感じますね。\n\n\n<div style=\"position:relative; width:100%; aspect-ratio:16/9; max-width:800px;\">\n  <iframe src=\"https://youtu.be/L7nFxrT3NHM\"\n          style=\"position:absolute; inset:0; width:100%; height:100%;\"\n          frameborder=\"0\" allowfullscreen\n          allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\"></iframe>\n</div>\n\n\n\n\n## Steps\n1. vscodeでフォルダを開く\n2. codexに相談する\n   - 実験記事.mdに貼り付けた画像の横幅はみ出ちゃうんだけどなんとかならない？？\n3. 変更してもらった内容をgithubに pushする\n\n\n\n## Result\n**GPT-5.1-Codex-Maxが速すぎる！！**",
       "links": [
         {
           "label": "Codex",
@@ -56,10 +56,10 @@ const experiments = [
       "Antigravity",
       "GitHub Pages"
     ],
-    "image": "posts/web_images/exp-001-a2fe.webp",
+    "image": "posts/web_images/exp-001-a41a.webp",
     "summary": "Antigravityにwebサイト作ってもらった（これのこと）",
     "detail": {
-      "content": "## Goal\nAntigravityにwebサイト作ってもらった（これのこと）\n\n## Steps\n1. Antigravityをダウンロード\n2. GPTとサイトの構想を話しあう。Antigravity用のプロンプトを作ってもらう\n3. Antigravityに作ってもらう（約30分）\n4. GitHub Pagesにアップ！\n   \n   \nAntigravityはこんな感じの仕様書を作ってくれます。\n![implement](posts/web_images/exp-001-1247.webp)\n\nこんな相談もできる。対応力がすごい！！\n![antigravity](posts/web_images/exp-001-7aa4.webp)\n\n\n仕様書と回答は日本語にしてねー、と言ったら、ごめんごめんと言って直してくれる。やさしい。\n\n## Result\n**君が今見ているものがResultだよ**",
+      "content": "## Goal\nAntigravityにwebサイト作ってもらった（これのこと）\n\n## Steps\n1. Antigravityをダウンロード\n2. GPTとサイトの構想を話しあう。Antigravity用のプロンプトを作ってもらう\n3. Antigravityに作ってもらう（約30分）\n4. GitHub Pagesにアップ！\n   \n   \nAntigravityはこんな感じの仕様書を作ってくれます。\n![implement](posts/web_images/exp-001-785c.webp)\n\nこんな相談もできる。対応力がすごい！！\n![antigravity](posts/web_images/exp-001-39f8.webp)\n\n\n仕様書と回答は日本語にしてねー、と言ったら、ごめんごめんと言って直してくれる。やさしい。\n\n## Result\n**君が今見ているものがResultだよ**",
       "links": [
         {
           "label": "Antigravity",
@@ -70,8 +70,18 @@ const experiments = [
   }
 ];
 
-// Lab Logs (Static for now, or could be moved to another file)
+// Lab Logs (managed in lab_logs.json)
 const labLogs = [
-    { date: "2025-11-25", content: "Markdown記事管理システムを導入。" },
-    { date: "2025-11-25", content: "サイトを公開しました。GitHub Pagesで運用開始。" },
+  {
+    "date": "2025-11-25",
+    "content": "Exmerimentで初めての記事を公開！"
+  },
+  {
+    "date": "2025-11-25",
+    "content": "Markdown記事管理フローを導入"
+  },
+  {
+    "date": "2025-11-25",
+    "content": "サイトを公開（GitHub Pages 運用開始）"
+  }
 ];
