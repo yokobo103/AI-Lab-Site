@@ -3,6 +3,7 @@ import json
 import re
 import glob
 from pathlib import Path
+import hashlib
 
 # 画像軽量化用
 try:
@@ -98,7 +99,8 @@ def create_web_image(rel_from_root: str, exp_id: str) -> str:
 
     # 出力ファイル名: 実験ID + パスのハッシュで一意に
     base = exp_id or os.path.splitext(os.path.basename(rel_from_root))[0]
-    out_name = f"{base}-{abs(hash(rel_from_root)) & 0xffff:x}.webp"
+    digest = hashlib.md5(rel_from_root.encode("utf-8")).hexdigest()[:8]
+    out_name = f"{base}-{digest}.webp"
     out_abs_path = WEB_IMAGE_DIR / out_name
 
     try:
