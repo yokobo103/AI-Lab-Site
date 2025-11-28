@@ -611,6 +611,19 @@ ul {
     transform: scale(1.05);
 }
 
+/* Desktop layout tweaks */
+@media (min-width: 1024px) {
+    /* 記事モーダルを広げる */
+    .modal-content {
+        max-width: 1000px;  /* 好みで 900〜1100px くらいに調整 */
+    }
+
+    /* 必要ならページ全体のコンテナも少し広げる */
+    .container {
+        max-width: 1100px;  /* デフォルトは 1000px */
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .site-nav {
@@ -847,4 +860,10 @@ ul {
     .site-title-text {
         display: none;
     }
+}
+
+
+/* PCでの表示幅を広げる */
+@media (min-width: 1024px) {
+    .modal-content { max-width: 1000px; }
 }
