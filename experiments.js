@@ -5,6 +5,26 @@
 
 const experiments = [
   {
+    "id": "exp-004",
+    "title": "sunoの進化がすごい！",
+    "date": "2025-11-28",
+    "tags": [
+      "suno",
+      "music"
+    ],
+    "image": "posts/web_images/exp-004-b13e346b.webp",
+    "summary": "もうこれでいいじゃん",
+    "detail": {
+      "content": "## これは何の実験？\nこのログは **「久々にsunoをいじったらおったまげた記録」** です。  \n音楽生成AIの「suno」についてです。\n\n\n<span style=\"color: #727272ff;\">\nsuno:音楽作れるすげぇ生成AI。以上！\n</span>\n\n\n---\n\n## やってみた流れ\nsuno.comにアクセス。アカウントは以前つくったものがある。\n\n1. プロンプト「気が狂ったような猫の歌。無駄におしゃれ。ジャズロック」\n2. 「Create」を押す\n3. 4曲生成される（v4.5はフルで聴ける、v5は1分しか聴けない）\n4. おったまげる\n\n\n\n<div style=\"position:relative; width:100%; aspect-ratio:16/9; max-width:800px;\">\n  <iframe src=\"https://www.youtube.com/embed/r7mBFzmFgcA?si=MHn7TXDEgQ7I1sRo\"\n          style=\"position:absolute; inset:0; width:100%; height:100%;\"\n          frameborder=\"0\" allowfullscreen\n          allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\"></iframe>\n</div>\n\n\n\n⚠️ちなみに商用利用は有料プランに入る必要があるのでご注意を\n\n\n## 気づき・メモ\n\n- v3.5に比べて圧倒的にすごくなっている気がする・・・\n　　（以前動画とっておけばよかった・・・）\n- 好みの音楽を毎日作る時代が来るのか？！\n\n---\n\n## まとめ（Result）\n**sunoすごいよ、みんなも楽しいからやってみなよ**",
+      "links": [
+        {
+          "label": "suno",
+          "url": "https://suno.com/"
+        }
+      ]
+    }
+  },
+  {
     "id": "exp-003",
     "title": "nanobanana vs probanana",
     "date": "2025-11-26",
