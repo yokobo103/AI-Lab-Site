@@ -151,8 +151,13 @@ ul {
 
 /* Hero Section */
 .hero {
-    padding: 80px 0;
+    position: relative;
+    padding: 120px 0;
     text-align: center;
+    color: #ffffff;
+    background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.6)),
+        url('assets/images/yokobo_ai_lab_top.png') center/cover no-repeat;
 }
 
 .hero-subtitle {
@@ -163,18 +168,23 @@ ul {
 }
 
 .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.7rem;
     font-weight: 800;
     line-height: 1.2;
     margin-bottom: 20px;
+    text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
 .hero-description {
-    color: var(--text-muted);
+    color: #e5e7eb;
     margin-bottom: 30px;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.hero .btn-primary {
+    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.35);
 }
 
 /* Common Section Styles */

@@ -5,6 +5,26 @@
 
 const experiments = [
   {
+    "id": "exp-005",
+    "title": "実験タイトル",
+    "date": "2025-11-29",
+    "tags": [
+      "画像生成AI",
+      "probanana"
+    ],
+    "image": "posts/web_images/exp-005-11d74090.webp",
+    "summary": "サイトが華やかになりました🐈",
+    "detail": {
+      "content": "## これは何の実験？\n今回はわかりやすく **「トップ画像をつくってみよう」** です。  \nいまのシンプルなデザインもいいんだけれど、やっぱりトップ画像、入れてみたいよね。\n<br>\n---\n\n## やってみた流れ\nよこぼのnote,X等のアイコン画像をもとに、ヘッダー画像を作って欲しいと依頼。\n\n**■Chat GPT**\n![alt text](posts/web_images/exp-005-8d9b5b76.webp)\n\n→うん、まあ悪くはない。日本語も意外とかけている。\n　そしてちょっと欲が出ました。文字はピクセル風がいいなぁ・・・\n\n![alt text](posts/web_images/exp-005-d6e113eb.webp)\n\n→うーん、\"よこほ\"かぁ・・・やっぱり崩れちゃうよね、別チャットで再トライしよう。\n\n![alt text](posts/web_images/exp-005-11d74090.webp)\n\n→なかなかいいじゃない。\n　💡生成（文章・画像）がうまくいかないときは別チャットに切り替えるのがおすすめです\n<br>\n<br>\n\n**■Gemini(nanobanana)**\n\n![alt text](posts/web_images/exp-005-93b04c6e.webp)\n\n→なかなかかっこよさげ。でも文字がちょっと惜しい。日本語超えちゃってる。\n\n\n![alt text](posts/web_images/exp-005-0c8bb3d1.webp)\n\n→よこ\"ば\"かぁ、\"ぼ\"って難しいんだなぁ・・・\n<br>\n<br>\n\n**■Gemini(probanana)**\n\n![alt text](posts/web_images/exp-005-1d27f2f2.webp)\n\n\n→やるじゃん。文句無いっす。ありがとうございます🙇‍♂️\n<br>\n\n---\n\n## 気づき・メモ\n\n- やっぱりプロバナナはすごい\n- AIって何回もやってみるのが大事だよね\n- \"ぼ\"ってすごく難しいんだなぁ\n<br>\n---\n\n## まとめ（Result）\n**トップ画像ができたのうれしい😊**",
+      "links": [
+        {
+          "label": "Nano Banana Pro",
+          "url": "https://gemini.google/jp/overview/image-generation/?hl=ja"
+        }
+      ]
+    }
+  },
+  {
     "id": "exp-004",
     "title": "sunoの進化がすごい！",
     "date": "2025-11-28",
@@ -55,7 +75,7 @@ const experiments = [
     "image": "posts/web_images/exp-002-51db2f60.webp",
     "summary": "Webサイトの画像がはみ出す問題を、朝の10分でAIに直してもらったログ。",
     "detail": {
-      "content": "## これは何の実験？\n当サイトの「画像が右側にビヨーンとはみ出す問題」を  \n**Codex 先生に10分で直してもらった記録**です。\n\n- Web初心者あるある：CSSがわからん\n- エンジニアなら一瞬でも、非エンジニアには難易度が高い\n- でもAIなら、相談 → 修正 → コード生成 → 完了 が10分\n\nそんな “AIの便利さ” を実感した回。\n\n\n<span style=\"color: #505050ff;\">\nvscodeとは・・・\n　VS Code は「パソコンで文章を書くみたいに、プログラムもかんたんに書けるアプリ」だよ。\n　難しい設定なしで、コードを書く・保存する・動かすがひとつでできる便利ツール。\n</span>\n\n---\n\n## やってみた流れ\n\nまずは問題の様子。  \n記事に貼った画像がこんな風に **びよーん** とはみ出してしまっていた…👇\n\n![alt text](posts/web_images/exp-002-56fddbfe.webp)\n\nエンジニアの人なら CSS をちょいっと書き換えて終わりなんだろうけど、  \nよこぼは **非エンジニアの超初心者🔰**。\n\nということで、ここで **こーでっくすぅ！（Codex）** の出番。\n\n「画像がはみ出ちゃうんだけど、なんとかならない？」  \nと聞いたら、ほんとに10分かからず修正コードを出してくれた。\n\n修正後はこちら👇  \n（ちゃんと収まってる！）\n\n![alt text](posts/web_images/exp-002-15a8ee6d.webp)\n\nもう完全にドラ○もんの世界。\n\n---\n\n## 修正の様子（動画）\n2025-11-28  \nCodex が実際に修正しているところを動画にしました。\n\n（無音だと寂しかったので BGM つきです。  \n音量注意！BGM は Suno v4.5 に作ってもらいました）\n\n<div style=\"position:relative; width:100%; aspect-ratio:16/9; max-width:800px;\">\n  <iframe src=\"https://www.youtube.com/embed/L7nFxrT3NHM?si=aB9fHzcNMbDJNtkC\"\n          style=\"position:absolute; inset:0; width:100%; height:100%;\"\n          frameborder=\"0\" allowfullscreen\n          allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\"></iframe>\n</div>\n\n---\n\n## 気づき・メモ\n\n- まさか朝一で自分のwebサイトを修正する日が来るとは・・・\n- vscodeでAIとチャットしながら編集する体験ってちょっと近未来的\n- GitHub Pages への push まで含めて **10分以内** は普通に革命\n\n---\n\n## まとめ（Result）\n**GPT-5.1-Codex-Max、圧倒的に速い。  \nAIに「小さな修正」を任せると、世界がめちゃ軽くなる。**",
+      "content": "## これは何の実験？\n当サイトの「画像が右側にビヨーンとはみ出す問題」を  \n**Codex 先生に10分で直してもらった記録**です。\n\n- Web初心者あるある：CSSがわからん\n- エンジニアなら一瞬でも、非エンジニアには難易度が高い\n- でもAIなら、相談 → 修正 → コード生成 → 完了 が10分\n\nそんな “AIの便利さ” を実感した回。\n\n\n<span style=\"color: #727272ff;\">\nvscodeとは・・・\n　VS Code は「パソコンで文章を書くみたいに、プログラムもかんたんに書けるアプリ」だよ。\n　難しい設定なしで、コードを書く・保存する・動かすがひとつでできる便利ツール。\n</span>\n<br>\n---\n\n## やってみた流れ\n\nまずは問題の様子。  \n記事に貼った画像がこんな風に **びよーん** とはみ出してしまっていた…👇\n\n![alt text](posts/web_images/exp-002-56fddbfe.webp)\n\nエンジニアの人なら CSS をちょいっと書き換えて終わりなんだろうけど、  \nよこぼは **非エンジニアの超初心者🔰**。\n\nということで、ここで **こーでっくすぅ！（Codex）** の出番。\n\n「画像がはみ出ちゃうんだけど、なんとかならない？」  \nと聞いたら、ほんとに10分かからず修正コードを出してくれた。\n\n修正後はこちら👇  \n（ちゃんと収まってる！）\n\n![alt text](posts/web_images/exp-002-15a8ee6d.webp)\n\nもう完全にドラ○もんの世界。\n<br>\n---\n\n## 修正の様子（動画）\n2025-11-28  \nCodex が実際に修正しているところを動画にしました。\n\n（無音だと寂しかったので BGM つきです。  \n音量注意！BGM は Suno v4.5 に作ってもらいました）\n\n<div style=\"position:relative; width:100%; aspect-ratio:16/9; max-width:800px;\">\n  <iframe src=\"https://www.youtube.com/embed/L7nFxrT3NHM?si=aB9fHzcNMbDJNtkC\"\n          style=\"position:absolute; inset:0; width:100%; height:100%;\"\n          frameborder=\"0\" allowfullscreen\n          allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\"></iframe>\n</div>\n<br>\n---\n\n## 気づき・メモ\n\n- まさか朝一で自分のwebサイトを修正する日が来るとは・・・\n- vscodeでAIとチャットしながら編集する体験ってちょっと近未来的\n- GitHub Pages への push まで含めて **10分以内** は普通に革命\n<br>\n---\n\n## まとめ（Result）\n**GPT-5.1-Codex-Max、圧倒的に速い。<br> AIに「小さな修正」を任せると、世界がめちゃ軽くなる。**",
       "links": [
         {
           "label": "Codex",
@@ -75,7 +95,7 @@ const experiments = [
     "image": "posts/web_images/exp-001-788c66cb.webp",
     "summary": "Antigravityにwebサイト作ってもらった（これのこと）",
     "detail": {
-      "content": "## これは何の実験？\nGoogleの **Antigravity** に、  \n**実際に Web サイトを丸ごと作ってもらえるのか？**  \nを試したログ。\n\n- 「AIにサイト作れるの？」という人向け\n- コードを書かずにサイトを持ちたい人にも刺さる\n\n<span style=\"color: #505050ff;\">\nそもそもAntigravityってなに？？\n→「話すだけでWebサイトを作ってくれる“AI職人”」\n（でもコードを扱うのでエンジニアじゃない人からみたらちょっといかつい・・・）\n</span>\n---\n\n## やってみた流れ\n1. Antigravityをダウンロード  \n2. GPTとに相談して構想を立てる  \n3. Antigravity用プロンプトを作ってもらう  \n4. そのまま Antigravity に投げたら…約30分でサイト完成！！  \n5. GitHub Pages にアップして公開！\n\n\n最初はぜんぶ英語で出力してきたけど、\n「仕様書と回答は日本語にしてねー」とお願いしたら  \n「ごめんごめん！」ってちゃんと直してくれる。やさしい。\n\n\n\n仕様書はこんな感じで生成される👇  \n（しごとがていねい！）\n\n![implement](posts/web_images/exp-001-02f41c35.webp)\n\n\nさらに対話力もすごい。こんな質問も余裕で返してくれる👀\n\n![antigravity](posts/web_images/exp-001-e29d0c94.webp)\n\n\n\n話すだけでこんなサイトつくってくれるなんておどろきー！！！\n![alt text](posts/web_images/exp-001-69fed1c3.webp)\n\n\n---\n\n## 気づき・学び\n- Antigravityのしごでき\n- 仕様書がていねいで勉強になるなー\n- GPTとの事前ブレストがめちゃ大事（ここで方向性固まる）\n\n---\n\n## まとめ（Result）\n**君が今見ているサイトがResultだよ**\nAntigravity、本当に30分でここまで作ってくれる。",
+      "content": "## これは何の実験？\nGoogleの **Antigravity** に、  \n**実際に Web サイトを丸ごと作ってもらえるのか？**  \nを試したログ。\n\n- 「AIにサイト作れるの？」という人向け\n- コードを書かずにサイトを持ちたい人にも刺さる\n\n\n<span style=\"color: #727272ff;\">\nそもそもAntigravityってなに？？\n→「話すだけでWebサイトを作ってくれる“AI職人”」\n（でもコードを扱うのでエンジニアじゃない人からみたらちょっといかつい・・・）\n</span>\n\n---\n\n## やってみた流れ\n1. Antigravityをダウンロード  \n2. GPTとに相談して構想を立てる  \n3. Antigravity用プロンプトを作ってもらう  \n4. そのまま Antigravity に投げたら…約30分でサイト完成！！  \n5. GitHub Pages にアップして公開！\n\n\n最初はぜんぶ英語で出力してきたけど、\n「仕様書と回答は日本語にしてねー」とお願いしたら  \n「ごめんごめん！」ってちゃんと直してくれる。やさしい。\n\n\n\n仕様書はこんな感じで生成される👇  \n（しごとがていねい！）\n\n![implement](posts/web_images/exp-001-02f41c35.webp)\n\n\nさらに対話力もすごい。こんな質問も余裕で返してくれる👀\n\n![antigravity](posts/web_images/exp-001-e29d0c94.webp)\n\n\n\n話すだけでこんなサイトつくってくれるなんておどろきー！！！\n![alt text](posts/web_images/exp-001-69fed1c3.webp)\n\n\n---\n\n## 気づき・学び\n- Antigravityのしごでき\n- 仕様書がていねいで勉強になるなー\n- GPTとの事前ブレストがめちゃ大事（ここで方向性固まる）\n\n---\n\n## まとめ（Result）\n**君が今見ているサイトがResultだよ**\nAntigravity、本当に30分でここまで作ってくれる。",
       "links": [
         {
           "label": "Antigravity",
@@ -88,6 +108,10 @@ const experiments = [
 
 // Lab Logs (managed in lab_logs.json)
 const labLogs = [
+  {
+    "date": "2025-11-29",
+    "content": "トップ画像をつくりました"
+  },
   {
     "date": "2025-11-25",
     "content": "Exmerimentで初めての記事を公開！"
