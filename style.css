@@ -157,7 +157,7 @@ ul {
     color: #ffffff;
     background:
         linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.6)),
-        url('assets/images/yokobo_ai_lab_top.png') center/cover no-repeat;
+        url('assets/asset_images/yokobo_ai_lab_top.png') center/cover no-repeat;
 }
 
 .hero-subtitle {
@@ -623,14 +623,14 @@ ul {
 
 /* Desktop layout tweaks */
 @media (min-width: 1024px) {
-    /* 記事モーダルを広げる */
+    /* 記事モーダルを庁E��めE*/
     .modal-content {
-        max-width: 1000px;  /* 好みで 900〜1100px くらいに調整 */
+        max-width: 1000px;  /* 好みで 900、E100px くらぁE��調整 */
     }
 
-    /* 必要ならページ全体のコンテナも少し広げる */
+    /* 忁E��なら�Eージ全体�EコンチE��も少し庁E��めE*/
     .container {
-        max-width: 1100px;  /* デフォルトは 1000px */
+        max-width: 1100px;  /* チE��ォルト�E 1000px */
     }
 }
 
@@ -873,7 +873,7 @@ ul {
 }
 
 
-/* PCでの表示幅を広げる */
+/* PCでの表示幁E��庁E��めE*/
 @media (min-width: 1024px) {
     .modal-content { max-width: 1000px; }
 }
