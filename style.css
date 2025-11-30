@@ -1,4 +1,4 @@
-/* Base Variables */
+﻿/* Base Variables */
 :root {
     --bg-color: #ffffff;
     --text-color: #1a1a1a;
@@ -157,7 +157,7 @@ ul {
     color: #ffffff;
     background:
         linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.6)),
-        url('assets/images/yokobo_ai_lab_top.png') center/cover no-repeat;
+        url('assets/asset_images/yokobo_ai_lab_top.png') center/cover no-repeat;
 }
 
 .hero-subtitle {
@@ -623,20 +623,25 @@ ul {
 
 /* Desktop layout tweaks */
 @media (min-width: 1024px) {
-    /* 記事モーダルを広げる */
+    /* 險倅ｺ九Δ繝ｼ繝繝ｫ繧貞ｺ・￡繧・*/
     .modal-content {
-        max-width: 1000px;  /* 好みで 900〜1100px くらいに調整 */
+        max-width: 1000px;  /* 螂ｽ縺ｿ縺ｧ 900縲・100px 縺上ｉ縺・↓隱ｿ謨ｴ */
     }
 
-    /* 必要ならページ全体のコンテナも少し広げる */
+    /* 蠢・ｦ√↑繧峨・繝ｼ繧ｸ蜈ｨ菴薙・繧ｳ繝ｳ繝・リ繧ょｰ代＠蠎・￡繧・*/
     .container {
-        max-width: 1100px;  /* デフォルトは 1000px */
+        max-width: 1100px;  /* 繝・ヵ繧ｩ繝ｫ繝医・ 1000px */
     }
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .site-nav {
+        .hero {
+        background:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.6)),
+            url('assets/asset_images/yokobo_ai_lab_top_mobile.png') center/cover no-repeat;
+    }
+.site-nav {
         display: none;
         /* For simplicity in this version, or could be hamburger */
     }
@@ -831,7 +836,12 @@ ul {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .site-nav {
+        .hero {
+        background:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.6)),
+            url('assets/asset_images/yokobo_ai_lab_top_mobile.png') center/cover no-repeat;
+    }
+.site-nav {
         display: none;
         /* For simplicity in this version, or could be hamburger */
     }
@@ -873,7 +883,9 @@ ul {
 }
 
 
-/* PCでの表示幅を広げる */
+/* PC縺ｧ縺ｮ陦ｨ遉ｺ蟷・ｒ蠎・￡繧・*/
 @media (min-width: 1024px) {
     .modal-content { max-width: 1000px; }
 }
+
+
