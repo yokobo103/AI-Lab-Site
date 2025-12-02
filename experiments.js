@@ -5,6 +5,30 @@
 
 const experiments = [
   {
+    "id": "exp-006",
+    "title": "実験タイトル",
+    "date": "2025-12-02",
+    "tags": [
+      "3Dモデル",
+      "Genie"
+    ],
+    "image": "posts/web_images/exp-006-aeb37224.webp",
+    "summary": "一覧に出る一言まとめ",
+    "detail": {
+      "content": "## これは何の実験？\n3Dモデルに手を出したい気分<br>\n<br>\nトライしたAI\n- Genie (Luma AI)  \n- Tripo AI\n<br>\nとにかく、このアイコンを3D化したい、というのがモチベーションでした。\n\n![alt text](posts/web_images/exp-006-59733a0d.webp)\n\n<br>\n---\n\n## やってみた流れ\n\n1. Tripo AIをためしてみる\n2. Tripo AIをあきらめる\n3. Genieをためしてみる\n4. あきらめのネコを錬成する\n\n<br>\n\n**Tripo AI**\n\nひとまずためしたのが「Tripo　AI」です。<br>\n<br>\n3D化するのに必要な画像はnanobananaが作ってくれたので（←すごい！）<br>\n画像をもとに3Dモデルを生成できるという噂のこいつを使ってみることにしました。\n\n![alt text](posts/web_images/exp-006-aa4d24d7.webp)\n\n\nどんなのができるかな。。。わくわく！！\n\n<br>\n<br>\n\nできた3Dモデル（でーん）\n![alt text](posts/web_images/exp-006-33deb907.webp)\n\n<br>\nうーん・・・\nこれは・・・\n色がつかないです！（失敗）\n\nちなみにTripoはクレジット消費タイプです。<br>\n僕はあまり使いこなせていないので誰かためしていただきたいです！<br>\n（でもエクスポートが有料みたい・・・）\n\n<br>\n<br>\n\n**Genie**\n\n仕方なく、Genieで遊ぶことにしました。<br>\nなんで仕方ないのかと言うと、Genieは画像を読み込めないことがわかっていたからです。<br>\n（というか事前チャレンジしました）\n\nどうやらプロンプトから3Dモデルを生成できるのがウリのこいつ、<br>\n仕方がない、プロンプトを駆使してよこぼ猫を産み出すしかありません。。。！\n\n![alt text](posts/web_images/exp-006-f0e5402e.webp)\nGenieのトップ画面はこんな感じ。<br>\nプロンプトを入力したら3Dモデルができます。（どうやら英語じゃなきゃだめっぽい）<br>\n<br>\nGPTと相談して、アイコン猫をかんぺきに再現できるプロンプトを用意しました。<br>\nこれでもくらえ！！たのむ！！！\n\n![alt text](posts/web_images/exp-006-31108167.webp)\nねこー！！<br>\nなんかこわい・・・\n\n![alt text](posts/web_images/exp-006-331ba31a.webp)\n最終的にこいつが（強いて言えば）気に入ったので3Dモデルをダウンロードしました。<br>\nどんな風に遊んでやろうかな・・・\n\n<br>\n<br>\n\n---\n\n## 気づき・メモ\n\n- 3Dモデルはなかなか難しかった・・・\n- Genieはとっても面白い。思うようにいかないところがまた面白い。\n- 今回ゲットした猫で遊びたい\n\n---\n\n## まとめ（Result）\n**こうして3D沼の冒険が始まったのであった**",
+      "links": [
+        {
+          "label": "Genie",
+          "url": "https://lumalabs.ai/genie?view=create"
+        },
+        {
+          "label": "Tripo AI",
+          "url": "https://www.tripo3d.ai/ja"
+        }
+      ]
+    }
+  },
+  {
     "id": "exp-005",
     "title": "実験タイトル",
     "date": "2025-11-29",
