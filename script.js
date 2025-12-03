@@ -2,9 +2,26 @@
  * AI Experimental Lab - Main Script
  */
 
+// CDLEブログのカード用データ
+// 追加したいときは下の配列に { id, title, url, thumb, desc } を足すだけでOK
+// thumb を省略すると OGP 画像を自動取得（外部API: api.microlink.io）し、なければプレースホルダー表示。
+const cdlePosts = [
+    {
+        id: 'cdle-001',
+        title: '超初心者🔰の勉強のじかん①（ドロップアウトと過学習）',
+        url: 'https://cdle.jp/blogs/df1093f96b54',
+        // thumb: 'https://example.com/your-ogp.png', // 手動指定する場合
+        desc: '超初心者🔰の勉強のじかん①（ドロップアウトと過学習）'
+    }
+];
+
+// OGP取得キャッシュ（同じURLへの連続リクエストを防ぐ）
+const ogpCache = new Map();
+
 document.addEventListener('DOMContentLoaded', () => {
     renderExperiments();
     renderLogs();
+    renderCdle();
     setupThemeToggle();
     setupModal();
 });
@@ -65,6 +82,83 @@ function renderLogs() {
             <p class="log-content">${log.content}</p>
         </div>
     `).join('');
+}
+
+/**
+ * Render CDLE Blog Cards
+ */
+function renderCdle() {
+    const grid = document.getElementById('cdle-grid');
+    if (!grid || typeof cdlePosts === 'undefined') return;
+
+    const fallbackThumb = 'https://placehold.co/600x360?text=CDLE+Blog';
+
+    grid.innerHTML = cdlePosts.map(post => `
+        <article class="cdle-card experiment-card">
+            <a href="${post.url}" target="_blank" rel="noopener" class="cdle-thumb-link">
+                <div class="card-image-container">
+                    <img src="${post.thumb || fallbackThumb}" ${post.thumb ? '' : `data-ogp-url="${post.url}"`} alt="${post.title}" class="card-image cdle-thumb" loading="lazy">
+                </div>
+            </a>
+            <div class="card-header">
+                <span class="card-date">CDLE Blog</span>
+                <h3 class="card-title">${post.title}</h3>
+            </div>
+            <p class="card-summary">${post.desc || '<span class="cdle-desc-placeholder">CDLEブログの紹介文をここに追加してください。</span>'}</p>
+            <div class="card-footer">
+                <a class="card-link" href="${post.url}" target="_blank" rel="noopener">View Details →</a>
+            </div>
+        </article>
+    `).join('');
+
+    // thumb が未指定のものは OGP 画像を自動取得して差し替え
+    resolveCdleOgps();
+}
+
+/**
+ * 外部OGP APIから画像を取得し、プレースホルダーを置き換える
+ */
+async function resolveCdleOgps() {
+    const targets = Array.from(document.querySelectorAll('.cdle-thumb[data-ogp-url]'));
+    if (targets.length === 0) return;
+
+    await Promise.allSettled(targets.map(async (img) => {
+        const targetUrl = img.dataset.ogpUrl;
+        const ogp = await fetchOgpImage(targetUrl);
+        if (ogp) {
+            img.src = ogp;
+            img.removeAttribute('data-ogp-url');
+        }
+    }));
+}
+
+/**
+ * Microlink API を使って OGP 画像URLを取得
+ */
+async function fetchOgpImage(targetUrl) {
+    if (!targetUrl) return null;
+
+    if (ogpCache.has(targetUrl)) {
+        return ogpCache.get(targetUrl);
+    }
+
+    const endpoint = `https://api.microlink.io/?url=${encodeURIComponent(targetUrl)}&meta=true`;
+
+    try {
+        const res = await fetch(endpoint);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const imageUrl = json?.data?.image?.url;
+        if (imageUrl) {
+            ogpCache.set(targetUrl, imageUrl);
+            return imageUrl;
+        }
+    } catch (err) {
+        console.warn('OGP fetch failed for', targetUrl, err);
+    }
+
+    ogpCache.set(targetUrl, null);
+    return null;
 }
 
 /**
