@@ -5,6 +5,30 @@
 
 const experiments = [
   {
+    "id": "exp-007",
+    "title": "ARチャレンジ",
+    "date": "2025-12-04",
+    "tags": [
+      "AR",
+      "3Dモデル"
+    ],
+    "image": "posts/web_images/exp-007-148c68e3.webp",
+    "summary": "俺のAR時代が始まったぜ！",
+    "detail": {
+      "content": "## これは何の実験？\nこのログは **「AR開発してみた記録」** です。  \nそうなんです、そもそもなぜ3Dモデルに興味持ったかというと、ARやってみたかったからなんです。\n<br>\n最後まで読んでくださいね・・・\n<br>\n\n---\n\n## やってみた流れ\n<br>\n1. 前回作ったglbファイルをudszに変換\n2. AR用のhtmlファイルを作る\n3. iPhoneで試してみる\n<br>\n前回作ったネコチャンはglbという形式のファイルです。\n私はiPhoneなので、iOSでテストができるようにusdzという形式のファイルに変換しなければいけません。\n（私も初めて知りました。3Dファイルなんて普段つかいませんからね）\n<br>\n<br>\n<br>\n<small>glb：3Dモデルの形や色、アニメーションなどをひとまとめにした、Webでもアプリでも扱いやすい万能形式です。ゲームやブラウザ表示にそのまま使われます。</small><br>\n<small>usdz：Apple製品（iPhone・iPad）でAR表示するために最適化された3Dファイルです。読み込みが速く、ARでそのまま立体を置いて見られます。</small>\n<br>\n<br>\n<br>\n<br>\nファイル形式の変換のために、わざわざ「Blender」という3Dモデリングソフトをインストールしました。<br>\nいいんです、Blenderは気になっていたので。いずれ使いこなします。<br>\n<br>\n\n![alt text](posts/web_images/exp-007-62f3b611.webp)\n<small>blenderでファイル変換されるネコチャン</small>\n\n<br>\n<br>\nそしてhtmlファイルを作成。↓の部分で画像ファイルを指定しているみたい。\nテストはできていないですが、glbファイルでAndoroidでも動く・・・はず。\n\n```\n<model-viewer\n  src=\"../models/cat.glb\"\n  ios-src=\"../models/cat.usdz\"\n  ar\n```\n\nさて、お待ちかね。いっくぜー！\n![alt text](posts/web_images/exp-007-4e64fc66.webp)\n<br>\nあれ？失敗しました・・・<br>\n<br>\n気を取り直してもう1回！！！\n<br>\n<br>\n\n![alt text](posts/web_images/exp-007-6680fe49.webp)\n<br>\nおおー！！<br>\nできてる！！<br>\nすごい！！！<br>\n\n![alt text](posts/web_images/exp-007-9fd98427.webp)\n\n\n<br>\n<br>\n\n**スマホのカメラでこのQRコードを読み込むと、**<br>\n**自作3DモデルをARで床に置いて見ることができます！**<br>\n<br>\n\n![alt text](posts/web_images/exp-007-4461fb34.webp)\n\n\n<br>\n<br>\n\n\n\n---\n\n## 気づき・メモ\n<br>\n- 3Dモデルに不慣れすぎて手こずったけど、3Dモデル作ってからARは本当にあっという間にできた\n- 他にも色んなファイルでできそう\n<br>\n---\n\n## まとめ（Result）\n<br>\n\n**目の前に3Dモデルが現れるのは、言い表すことのできない感動がありました。**\n\n<br>",
+      "links": [
+        {
+          "label": "Blender",
+          "url": "https://www.blender.org/"
+        },
+        {
+          "label": "ネコチャンAR（QRコードで読めなかった方はこちら）",
+          "url": "https://yokobo103.github.io/AI-Lab-Site/ar/cat.html"
+        }
+      ]
+    }
+  },
+  {
     "id": "exp-006",
     "title": "実験タイトル",
     "date": "2025-12-02",
@@ -132,6 +156,10 @@ const experiments = [
 
 // Lab Logs (managed in lab_logs.json)
 const labLogs = [
+  {
+    "date": "2025-12-03",
+    "content": "CDLEブログを載せました"
+  },
   {
     "date": "2025-11-29",
     "content": "トップ画像をつくりました"
