@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ねこモデル ARビュー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- model-viewer 本体（CDN） -->
+  <script type="module"
+    src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js">
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0b0b10;
+      color: #f5f5f5;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      margin: 0.5rem 1rem 0.8rem;
+      text-align: center;
+      opacity: 0.9;
+    }
+
+    model-viewer {
+      width: 100%;
+      max-width: 480px;
+      height: 60vh;
+      background: #151520;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    /* ARボタン */
+    #ar-button {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      padding: 0.6rem 1.4rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      background: #ffffff;
+      color: #111;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+    }
+
+    #ar-button:active {
+      transform: translateX(-50%) translateY(1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    /* ARヒント */
+    #ar-prompt {
+      position: absolute;
+      left: 50%;
+      top: 16px;
+      transform: translateX(-50%);
+      padding: 0.4rem 0.8rem;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .hint {
+      margin: 0.7rem 1.2rem 0;
+      font-size: 0.8rem;
+      opacity: 0.8;
+      text-align: center;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h1>床にネコを置いてみよう（AR）</h1>
+
+  <!-- ここが本体 -->  <!-- srcはandroid用　ios-srcはios用 -->
+  <model-viewer
+    src="../models/cat2.glb"         
+    ios-src="../models/cat2.usdz"    
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    environment-image="neutral"
+    shadow-intensity="1"
+    shadow-softness="0.8"
+    auto-rotate
+    autoplay
+    exposure="1"
+    >
+
+
+    <!-- ARボタンの見た目をカスタム -->
+    <button slot="ar-button" id="ar-button">
+      <span>📱 ARで床に置く</span>
+    </button>
+
+    <!-- AR開始時のヒント -->
+    <div id="ar-prompt" slot="ar-prompt">
+      スマホをゆっくり動かして、床を写してください
+    </div>
+  </model-viewer>
+
+  <p class="hint">
+    ※ ARボタンは、対応スマホ＋ブラウザ（主に Android の Chrome）でのみ表示されます。<br>
+    ※ PC から開くと通常の 3D ビューのみになります。
+  </p>
+</body>
+</html>
