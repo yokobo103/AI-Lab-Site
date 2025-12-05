@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>魔法ARテスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- model-viewer -->
+  <script type="module"
+    src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    model-viewer {
+      width: 100vw;
+      height: 100vh;
+      --progress-bar-color: transparent;
+    }
+
+    /* 画面に重ねるシールド */
+    .shield {
+      position: fixed;
+      width: 260px;       /* サイズはお好みで */
+      height: 260px;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0.1);
+      opacity: 0;
+      background: url("ar_images/shield_hex.jpg") center/contain no-repeat;
+      mix-blend-mode: screen;
+    }
+
+    .shield.active {
+      animation: shield-pop 700ms ease-out forwards;
+    }
+
+    @keyframes shield-pop {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.1);
+      }
+      20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.3);
+      }
+    }
+
+    /* 画面下にちょっとだけ説明 */
+    .hint {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 14px;
+      text-shadow: 0 0 8px #000;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- AR対応 model-viewer -->
+  <model-viewer id="mv"
+    src="models/cat2.glb"        <!-- ★よこぼのglbパスに変更 -->
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    autoplay
+    auto-rotate
+    shadow-intensity="1"
+    exposure="1">
+  </model-viewer>
+
+  <!-- シールド -->
+  <div id="shield" class="shield"></div>
+
+  <div class="hint">画面をタップすると魔法シールド発動✨</div>
+
+  <!-- 効果音（任意） -->
+  <audio id="se-shield" src="sounds/magic_shield.mp3" preload="auto"></audio>
+
+  <script>
+    const mv = document.getElementById('mv');
+    const shield = document.getElementById('shield');
+    const seShield = document.getElementById('se-shield');
+
+    // 画面タップでシールド発動
+    function castShield(x, y) {
+      // 位置をセット
+      shield.style.left = x + 'px';
+      shield.style.top = y + 'px';
+
+      // アニメーションをリスタート
+      shield.classList.remove('active');
+      // 少し待ってから再付与しないと連続タップで止まる
+      requestAnimationFrame(() => {
+        void shield.offsetWidth; // reflow
+        shield.classList.add('active');
+      });
+
+      // 効果音
+      if (seShield) {
+        seShield.currentTime = 0;
+        seShield.play().catch(() => {});
+      }
+    }
+
+    // 画面タップ（スマホ/PC両対応）
+    function onTap(e) {
+      const touch = e.touches ? e.touches[0] : e;
+      castShield(touch.clientX, touch.clientY);
+    }
+
+    mv.addEventListener('click', onTap);
+    mv.addEventListener('touchstart', onTap);
+  </script>
+</body>
+</html>
