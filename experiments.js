@@ -5,6 +5,30 @@
 
 const experiments = [
   {
+    "id": "exp-008",
+    "title": "ARチャレンジ2!!!",
+    "date": "2025-12-05",
+    "tags": [
+      "AR",
+      "SPAR3D"
+    ],
+    "image": "posts/web_images/exp-008-ddea48c1.webp",
+    "summary": "大幅グレードアップネコチャン",
+    "detail": {
+      "content": "<br>\n\n## これは何の実験？\n<br>\n前回までの初代ネコチャンもまあまあ好きだったんですが、 <br>\nもうちょっとトップ画像のネコに近い3Dモデルを作ろうという試みです。 \n<br>\n<br>\n---\n<br>\n\n## やってみた流れ\n<br>\n<br>\n\n1. ピクセル猫は3D化に向かないことが判明\n2. 3Dアニメっぽい猫をGPTに作ってもらう\n3. SF3Dは気に入らなかったのでSPAR3Dで3Dモデルをつくる\n4. ARで召喚\n\n<br>\n<br>\nトップ画像のネコはピクセルアート風なんですが、<br>\nこれは3D化に向かないんです。<br>\nこうなります。<br>\n\n![alt text](posts/web_images/exp-008-9cd508ab.webp)\n\n<br>\n\nそこで、GPTさんに3Dアニメ風の猫を作ってもらいました。<br>\nなかなかいい働きでした。一発OKです。<br>\n<br>\n\n\n![alt text](posts/web_images/exp-008-b854d4bc.webp)\n\n<br>\n<br>\n<br>\nそしてここからは、前回断念した2D→3Dの変換です。 \n<br>\n<br>\nHugging Faceというサイトで2D→3DにできるAIモデルを探してきました。\n<br>\n<br>\n\n\n<small>Hugging Face:AI開発に必要な学習済みモデル、データセット、ライブラリなどのプラットフォーム</small>\n<br>\n<br>\n初めに\"SF3D\"というモデルを使いましたが、ちょっと歯を見せてきたのが気に入らなくてやめました。でもすごい。<br>\n<br>\n\n![alt text](posts/web_images/exp-008-87fe8353.webp)\n\n次は\"SPAR3D\"というモデル。完璧やん。<br>\n\n![alt text](posts/web_images/exp-008-49cdd19c.webp)\n\n<br>\n<br>\n<br>\n\nさあここまで来たらもう前回と同じくhtmlファイルを作って、<br>\nAR化するだけです。<br>\n<br>\nどん！！！！\n\n<br>\n<br>\n\n![alt text](posts/web_images/exp-008-6769cfed.webp)\n\n![alt text](posts/web_images/exp-008-ddea48c1.webp)\n\n![alt text](posts/web_images/exp-008-693c23ef.webp)\n\n<br>\n超感動です！！！\n\n<br>\n<br>\n<br>\n\n**スマホのカメラでこのQRコードを読み込むと、**<br>\n**自作3DモデルをARで床に置いて見ることができます！**<br>\n<br>\n\n![alt text](posts/web_images/exp-008-a7003c21.webp)\n\n\n<br>\n\n\n<br>\n---\n<br>\n\n## 気づき・メモ\n<br>\n\n- ピクセルアートって3D向かないんだな\n- 3Dアニメ風は完璧に3Dになった、たぶん学習データとも関係してる気がする\n- 2回目だろうがスマホに表示されたときの感動は変らない\n<br>\n<br>\n\n---\n<br>\n\n## まとめ（Result）\n<br>\n\n**さよなら初代ネコチャン・・・完璧な3Dネコが爆誕したよ・・・**\n<br>",
+      "links": [
+        {
+          "label": "SPAR3D",
+          "url": "https://huggingface.co/spaces/stabilityai/stable-point-aware-3d"
+        },
+        {
+          "label": "Hugging Face",
+          "url": "https://huggingface.co/"
+        }
+      ]
+    }
+  },
+  {
     "id": "exp-007",
     "title": "ARチャレンジ",
     "date": "2025-12-04",
