@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Hand & Face Overlay Demo</title>
+  <title>Hand Counter + Face GLB</title>
   <style>
     body {
       margin: 0;
@@ -15,7 +15,7 @@
     video {
       display: none;
     }
-    /* glbを顔の前に重ねる用 */
+    /* 顔の前に重ねる glb */
     #face-model {
       position: fixed;
       top: 0;
@@ -23,9 +23,9 @@
       width: 200px;
       height: 200px;
       transform: translate(-50%, -50%) scaleX(-1); /* 中心合わせ＋左右反転 */
-      pointer-events: none; /* クリックを透過させる */
-      z-index: 10;          /* キャンバスより前面 */
-      display: none;        /* 顔がないときは非表示 */
+      pointer-events: none;
+      z-index: 10;
+      display: none;
     }
   </style>
 </head>
@@ -33,8 +33,7 @@
   <video id="video" playsinline></video>
   <canvas id="canvas"></canvas>
 
-  <!-- glb表示用 model-viewer -->
-  <!-- ★ src を自分の glb に差し替えてね！ -->
+  <!-- ★ここに自分の glb を指定 -->
   <model-viewer id="face-model"
                 src="../models/cat2.glb"
                 autoplay
@@ -42,7 +41,7 @@
                 camera-controls>
   </model-viewer>
 
-  <!-- MediaPipe Hands & FaceMesh & Camera utils -->
+  <!-- MediaPipe -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -51,47 +50,40 @@
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
   <script>
-    /****************************************************
-     * 指本数カウント（左右判定つき・高精度）
-     ****************************************************/
+    /************** 指本数カウント（左右判定つき） **************/
     function countFingers(landmarks, handedness) {
       let count = 0;
 
       // 親指（左右で判定が変わる）
       const thumbTip = landmarks[4];
       const thumbIP  = landmarks[3];
-
       let thumbExtended = false;
+
       if (handedness === "Right") {
-        // 右手 → 親指は画面左方向に伸びる（x が小さくなる）
+        // 右手 → 親指は画面左方向に伸びる
         thumbExtended = thumbTip.x < thumbIP.x;
       } else {
-        // 左手 → 親指は画面右方向に伸びる（x が大きくなる）
+        // 左手 → 親指は画面右方向に伸びる
         thumbExtended = thumbTip.x > thumbIP.x;
       }
       if (thumbExtended) count++;
 
-      // 他4本（人差し指〜小指）
+      // 人差し指〜小指
       const fingers = [
-        { tip: 8, base: 5 },   // 人差し指
-        { tip: 12, base: 9 },  // 中指
-        { tip: 16, base: 13 }, // 薬指
-        { tip: 20, base: 17 }  // 小指
+        { tip: 8, base: 5 },
+        { tip: 12, base: 9 },
+        { tip: 16, base: 13 },
+        { tip: 20, base: 17 }
       ];
-
       for (const f of fingers) {
         const tip  = landmarks[f.tip];
         const base = landmarks[f.base];
-        // 先端が付け根より「上」にあれば伸びていると判定
-        if (tip.y < base.y) {
-          count++;
-        }
+        if (tip.y < base.y) count++; // 先端が付け根より上
       }
-
       return count;
     }
 
-    window.onload = async () => {
+    window.onload = () => {
       const video = document.getElementById("video");
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
@@ -104,75 +96,59 @@
       resizeCanvas();
       window.addEventListener("resize", resizeCanvas);
 
-      // 背景（ビデオ）描画用のパラメータを共有（顔位置計算でも使う）
-      let lastDraw = {
-        drawW: 0,
-        drawH: 0,
-        offsetX: 0,
-        offsetY: 0
-      };
+      // Hands / Face 共通の描画パラメータ（Face側でも使う）
+      let lastDraw = { drawW: 0, drawH: 0, offsetX: 0, offsetY: 0 };
 
-      /****************************************************
-       * MediaPipe Hands 初期化
-       ****************************************************/
+      /************** Hands 初期化 **************/
       const hands = new Hands({
         locateFile: (file) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
       });
 
       hands.setOptions({
         maxNumHands: 2,
         modelComplexity: 1,
         minDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.6
+        minTrackingConfidence: 0.6,
       });
 
       hands.onResults(onHandsResults);
 
-      /****************************************************
-       * MediaPipe FaceMesh 初期化
-       ****************************************************/
+      /************** FaceMesh 初期化 **************/
       const faceMesh = new FaceMesh({
         locateFile: (file) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+          `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
       });
 
       faceMesh.setOptions({
         maxNumFaces: 1,
         refineLandmarks: true,
         minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
+        minTrackingConfidence: 0.5,
       });
 
       faceMesh.onResults(onFaceResults);
 
-      /****************************************************
-       * Camera 共通（同じフレームを hands & faceMesh に投げる）
-       ****************************************************/
+      /************** Camera 共通 **************/
       const camera = new Camera(video, {
         onFrame: async () => {
-          // 毎フレーム同じ画像を両方に送る
-          await Promise.all([
-            hands.send({ image: video }),
-            faceMesh.send({ image: video })
-          ]);
+          // 毎フレーム：Hands → FaceMesh の順に処理
+          await hands.send({ image: video });
+          await faceMesh.send({ image: video });
         },
         width: 640,
-        height: 480
+        height: 480,
       });
       camera.start();
 
-      /****************************************************
-       * Hands の結果（背景描画＋指カウンタ）
-       ****************************************************/
+      /************** Hands の結果：背景＋指カウンタ描画 **************/
       function onHandsResults(results) {
-        // 背景としてカメラ映像を左右反転して描画
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
 
-        const videoW = video.videoWidth;
-        const videoH = video.videoHeight;
+        const videoW = video.videoWidth || 640;
+        const videoH = video.videoHeight || 480;
         const scale = Math.min(canvas.width / videoW, canvas.height / videoH);
         const drawW = videoW * scale;
         const drawH = videoH * scale;
@@ -182,38 +158,29 @@
         ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
         ctx.restore();
 
-        // 描画パラメータを保存（顔用）
-        lastDraw.drawW = drawW;
-        lastDraw.drawH = drawH;
-        lastDraw.offsetX = offsetX;
-        lastDraw.offsetY = offsetY;
+        lastDraw = { drawW, drawH, offsetX, offsetY };
 
-        // 両手の指本数を表示
-        if (results.multiHandLandmarks) {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length) {
           for (let i = 0; i < results.multiHandLandmarks.length; i++) {
             const lm = results.multiHandLandmarks[i];
             const handedness = results.multiHandedness[i].label; // "Right" or "Left"
 
             const fingerCount = countFingers(lm, handedness);
 
-            // 人差し指付け根あたりの位置
+            // 人差し指付け根
             const hx = lm[5].x * drawW + offsetX;
             const hy = lm[5].y * drawH + offsetY;
 
-            // 左右反転後のスクリーン座標
-            const screenX = canvas.width - hx;
+            const screenX = canvas.width - hx; // 左右反転
             const screenY = hy;
 
-            // 数字表示
             ctx.font = "40px sans-serif";
             ctx.fillStyle = "rgba(255,255,255,0.95)";
             ctx.strokeStyle = "rgba(0,0,0,0.7)";
             ctx.lineWidth = 5;
-
             ctx.strokeText(fingerCount, screenX + 20, screenY - 20);
             ctx.fillText(fingerCount, screenX + 20, screenY - 20);
 
-            // 位置の目印
             ctx.beginPath();
             ctx.arc(screenX, screenY, 8, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(0,255,255,0.8)";
@@ -222,22 +189,24 @@
         }
       }
 
-      /****************************************************
-       * FaceMesh の結果（顔の前に glb を置く）
-       ****************************************************/
+      /************** FaceMesh の結果：顔位置に glb を配置 **************/
       function onFaceResults(results) {
-        if (!results.multiFaceLandmarks ||
-            results.multiFaceLandmarks.length === 0 ||
-            lastDraw.drawW === 0) {
-          // 顔がない場合は非表示
+        if (
+          !results.multiFaceLandmarks ||
+          results.multiFaceLandmarks.length === 0 ||
+          lastDraw.drawW === 0
+        ) {
           faceModel.style.display = "none";
           return;
         }
 
         const lm = results.multiFaceLandmarks[0];
 
-        // 顔のバウンディングボックス（正規化座標）
-        let minX = 1, maxX = 0, minY = 1, maxY = 0;
+        // 顔領域のバウンディングボックス
+        let minX = 1,
+          maxX = 0,
+          minY = 1,
+          maxY = 0;
         for (const p of lm) {
           if (p.x < minX) minX = p.x;
           if (p.x > maxX) maxX = p.x;
@@ -247,22 +216,19 @@
 
         const { drawW, drawH, offsetX, offsetY } = lastDraw;
 
-        // 顔中心の画像座標 → キャンバス座標
         const cx = ((minX + maxX) / 2) * drawW + offsetX;
         const cy = ((minY + maxY) / 2) * drawH + offsetY;
 
-        // 左右反転後の位置
-        const screenX = canvas.width - cx;
+        const screenX = canvas.width - cx; // 左右反転
         const screenY = cy;
 
-        // 顔幅に応じて glb のサイズを調整
         const faceWidthPx = (maxX - minX) * drawW;
-        const size = faceWidthPx * 1.4; // 少し大きめに
+        const size = faceWidthPx * 1.4; // ちょい大きめ
 
         faceModel.style.display = "block";
         faceModel.style.left = `${screenX}px`;
-        faceModel.style.top  = `${screenY}px`;
-        faceModel.style.width  = `${size}px`;
+        faceModel.style.top = `${screenY}px`;
+        faceModel.style.width = `${size}px`;
         faceModel.style.height = `${size}px`;
       }
     };
