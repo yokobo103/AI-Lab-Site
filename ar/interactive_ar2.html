@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Hand Magic Demo</title>
+  <title>Hand Counter Demo</title>
   <style>
     body {
       margin: 0;
@@ -30,9 +30,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
 
   <script>
-    // 指の本数を数える関数
+    // 指の本数を数える関数（手の大きさスケールを考慮）
     function countFingers(landmarks) {
-      const wrist = landmarks[0]; // 手首
+      const wrist = landmarks[0];     // 手首
+      const palmRef = landmarks[9];   // 中指付け根あたり
+      const palmSize = Math.hypot(
+        palmRef[0] - wrist[0],
+        palmRef[1] - wrist[1]
+      ) || 1; // 0割り防止
+
       const fingers = [
         { tip: 4, base: 1 },   // 親指
         { tip: 8, base: 5 },   // 人差し指
@@ -45,71 +51,21 @@
       for (const f of fingers) {
         const tip = landmarks[f.tip];
         const base = landmarks[f.base];
+
         const distTip  = Math.hypot(tip[0]  - wrist[0], tip[1]  - wrist[1]);
         const distBase = Math.hypot(base[0] - wrist[0], base[1] - wrist[1]);
-        if (distTip > distBase + 15) count++;
+
+        // 先端が付け根より「十分に」遠ければ伸びているとみなす
+        if (distTip - distBase > palmSize * 0.25) {
+          count++;
+        }
+      }
+
+      // ノイズ対策で 1 本だけ浮いた時は 0 に丸める
+      if (count === 1) {
+        return 0;
       }
       return count;
-    }
-
-    // 炎エフェクト
-    function drawFlame(ctx, x, y, t) {
-      const jitter = Math.sin(t / 100) * 5;
-      const grad = ctx.createLinearGradient(x, y - 80, x, y);
-      grad.addColorStop(0, "rgba(255, 255, 0, 0.9)");
-      grad.addColorStop(0.5, "rgba(255, 140, 0, 0.8)");
-      grad.addColorStop(1, "rgba(255, 0, 0, 0.6)");
-
-      ctx.save();
-      ctx.translate(jitter, 0);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.quadraticCurveTo(x - 25, y - 40, x, y - 80);
-      ctx.quadraticCurveTo(x + 25, y - 40, x, y);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(x, y - 10);
-      ctx.quadraticCurveTo(x - 35, y - 60, x, y - 100);
-      ctx.quadraticCurveTo(x + 35, y - 60, x, y - 10);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(255, 80, 0, 0.5)";
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // バリア（シールド）エフェクト
-    function drawBarrier(ctx, x, y, t) {
-      const baseRadius = 90;
-      const pulse = Math.sin(t / 300) * 10;
-      const r = baseRadius + pulse;
-
-      const grad = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
-      grad.addColorStop(0, "rgba(180, 255, 255, 0.6)");
-      grad.addColorStop(0.5, "rgba(0, 200, 255, 0.25)");
-      grad.addColorStop(1, "rgba(0, 120, 255, 0.05)");
-
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(0, 255, 255, 0.9)";
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x - r * 0.8, y);
-      ctx.lineTo(x + r * 0.8, y);
-      ctx.moveTo(x, y - r * 0.8);
-      ctx.lineTo(x, y + r * 0.8);
-      ctx.strokeStyle = "rgba(200, 255, 255, 0.6)";
-      ctx.stroke();
     }
 
     (async () => {
@@ -126,7 +82,7 @@
 
       await new Promise(resolve => { video.onloadedmetadata = resolve; });
 
-      // キャンバスはウィンドウサイズいっぱい（後で動画を等倍スケールで配置）
+      // キャンバスはウィンドウサイズいっぱい
       function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -138,38 +94,38 @@
       await tf.ready();
       const model = await handpose.load();
 
-      // 3. 描画ルーチン
+      // 3. 描画ループ
       async function render() {
-        const t = performance.now();
-
         // 手の位置推定
         const predictions = await model.estimateHands(video);
 
         // アスペクト比を維持しつつ、ウィンドウに収まる最大サイズで描画（左右反転）
-        const scale = Math.min(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+        const scale = Math.min(
+          canvas.width / video.videoWidth,
+          canvas.height / video.videoHeight
+        );
         const drawW = video.videoWidth * scale;
         const drawH = video.videoHeight * scale;
         const offsetX = (canvas.width - drawW) / 2;
         const offsetY = (canvas.height - drawH) / 2;
 
+        // 背景（カメラ映像）を描画：左右反転
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
         ctx.restore();
 
-        if (predictions.length > 0) {
-          const landmarks = predictions[0].landmarks;
+        // 手ごとに処理（複数手対応）
+        for (const hand of predictions) {
+          const landmarks = hand.landmarks;
 
           // 手の中点っぽい位置：人差し指付け根を使う
           const [hx, hy] = landmarks[5];
-          const [fx, fy] = landmarks[8]; // 人差し指先端
 
           // スクリーン座標にスケールしつつ左右反転
           const screenHx = canvas.width - (offsetX + hx * scale);
           const screenHy = offsetY + hy * scale;
-          const screenFx = canvas.width - (offsetX + fx * scale);
-          const screenFy = offsetY + fy * scale;
 
           const fingerCount = countFingers(landmarks);
 
@@ -178,22 +134,16 @@
           ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
           ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
           ctx.lineWidth = 4;
+
           const text = fingerCount.toString();
           ctx.strokeText(text, screenHx + 20, screenHy - 20);
           ctx.fillText(text, screenHx + 20, screenHy - 20);
 
-          // 本数でエフェクト切替
-          if (fingerCount <= 1) {
-            drawFlame(ctx, screenHx, screenHy, t);
-          } else if (fingerCount >= 4) {
-            drawBarrier(ctx, screenHx, screenHy, t);
-          } else {
-            ctx.beginPath();
-            ctx.arc(screenFx, screenFy, 25, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(255, 255, 0, 0.8)";
-            ctx.lineWidth = 5;
-            ctx.stroke();
-          }
+          // 参考までに、手の位置マーカー（小さな円）
+          ctx.beginPath();
+          ctx.arc(screenHx, screenHy, 8, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(0, 255, 255, 0.7)";
+          ctx.fill();
         }
 
         requestAnimationFrame(render);
