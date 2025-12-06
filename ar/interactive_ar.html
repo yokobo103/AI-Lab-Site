@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hand React Demo</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+    }
+    video {
+      display: none; /* 映像は隠しておく（canvasに描く用） */
+    }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <!-- TensorFlow.js 本体 -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+
+  <!-- 手検出モデル Handpose -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
+
+  <script>
+    (async () => {
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // 1. カメラ取得
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' }, // PCなら無視されるけどOK
+        audio: false
+      });
+      video.srcObject = stream;
+
+      // メタデータ読み込み完了待ち
+      await new Promise(resolve => {
+        video.onloadedmetadata = () => {
+          resolve();
+        };
+      });
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // 2. モデル読み込み
+      await tf.ready();
+      const model = await handpose.load();
+
+      // 指の軌跡用
+      let trail = [];
+
+      // 3. 描画ループ
+      async function render() {
+        // 手の位置推定
+        const predictions = await model.estimateHands(video);
+
+        // 背景としてカメラ映像を描画
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        let fingerX = null;
+        let fingerY = null;
+
+        if (predictions.length > 0) {
+          // 0番目の手の人差し指の先端（ランドマーク 8）を使う
+          const landmarks = predictions[0].landmarks;
+          const [x, y, z] = landmarks[8];
+          fingerX = x;
+          fingerY = y;
+
+          // 軌跡リストに追加
+          trail.push({ x, y, life: 1.0 });
+          if (trail.length > 20) trail.shift();
+        }
+
+        // 4. エフェクト描画（指先の周りに光の輪＋軌跡）
+        // 軌跡
+        for (const p of trail) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 30 * p.life, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 255, 255, ${0.4 * p.life})`;
+          ctx.lineWidth = 6 * p.life;
+          ctx.stroke();
+          p.life *= 0.9; // だんだん消えていく
+        }
+
+        // 指先のメインオーラ
+        if (fingerX !== null) {
+          ctx.beginPath();
+          ctx.arc(fingerX, fingerY, 40, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+          ctx.lineWidth = 8;
+          ctx.stroke();
+        }
+
+        requestAnimationFrame(render);
+      }
+
+      render();
+    })();
+  </script>
+</body>
+</html>
