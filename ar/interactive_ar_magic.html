@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Magic Hand Demo</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas { display: block; }
+    video { display: none; }
+  </style>
+</head>
+<body>
+  <video id="video" playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <script>
+    /* -----------------------------
+        指本数カウント（MediaPipe）
+    ----------------------------- */
+    function countFingers(lm) {
+      const wrist = lm[0];
+      const palmRef = lm[9];
+      const palmSize = Math.hypot(palmRef.x - wrist.x, palmRef.y - wrist.y);
+
+      const fingers = [
+        { tip: 4, base: 1 },
+        { tip: 8, base: 5 },
+        { tip: 12, base: 9 },
+        { tip: 16, base: 13 },
+        { tip: 20, base: 17 }
+      ];
+
+      let count = 0;
+      for (const f of fingers) {
+        const tip = lm[f.tip];
+        const base = lm[f.base];
+
+        const distTip = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+        const distBase = Math.hypot(base.x - wrist.x, base.y - wrist.y);
+
+        if (distTip - distBase > palmSize * 0.25) count++;
+      }
+      if (count === 1) return 0;
+      return count;
+    }
+
+    /* -----------------------------
+        魔法弾（炎）のリスト
+    ----------------------------- */
+    const fireballs = [];
+
+    function spawnFireball(x, y) {
+      fireballs.push({
+        x, y,
+        vx: 0,        // 上に飛ぶ
+        vy: -12,      
+        life: 60      // 60フレームで消える
+      });
+    }
+
+    function drawFireballs(ctx) {
+      for (let i = fireballs.length - 1; i >= 0; i--) {
+        const b = fireballs[i];
+
+        // 軌道更新
+        b.x += b.vx;
+        b.y += b.vy;
+        b.life--;
+
+        // 描画
+        const grad = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, 40);
+        grad.addColorStop(0, "rgba(255,200,50,1)");
+        grad.addColorStop(0.5, "rgba(255,80,0,0.8)");
+        grad.addColorStop(1, "rgba(255,0,0,0.2)");
+
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 40, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        if (b.life <= 0) fireballs.splice(i, 1);
+      }
+    }
+
+    /* -----------------------------
+        バリア描画
+    ----------------------------- */
+    function drawBarrier(ctx, x, y, t) {
+      const r = 80 + Math.sin(t / 300) * 10;
+
+      const grad = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
+      grad.addColorStop(0, "rgba(100,255,255,0.6)");
+      grad.addColorStop(0.7, "rgba(50,150,255,0.2)");
+      grad.addColorStop(1, "rgba(0,120,255,0.05)");
+
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "rgba(50,200,255,0.7)";
+      ctx.stroke();
+    }
+
+    /* -----------------------------
+        メイン処理
+    ----------------------------- */
+    window.onload = () => {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+
+      const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
+      });
+
+      hands.onResults(onResults);
+
+      const camera = new Camera(video, {
+        onFrame: async () => { await hands.send({ image: video }); },
+        width: 640, height: 480
+      });
+      camera.start();
+
+      function onResults(results) {
+        const t = performance.now();
+
+        // 画面にカメラ映像（左右反転）を描画
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+
+        const vW = video.videoWidth;
+        const vH = video.videoHeight;
+        const scale = Math.min(canvas.width / vW, canvas.height / vH);
+        const drawW = vW * scale;
+        const drawH = vH * scale;
+        const ox = (canvas.width - drawW) / 2;
+        const oy = (canvas.height - drawH) / 2;
+
+        ctx.drawImage(video, ox, oy, drawW, drawH);
+        ctx.restore();
+
+        // 魔法弾を先に描画
+        drawFireballs(ctx);
+
+        // 両手処理
+        if (results.multiHandLandmarks) {
+          for (const lm of results.multiHandLandmarks) {
+            const count = countFingers(lm);
+
+            // 手の位置（人差し指付け根）
+            const hx = canvas.width - (lm[5].x * drawW + ox);
+            const hy = lm[5].y * drawH + oy;
+
+            // 数字表示
+            ctx.font = "32px sans-serif";
+            ctx.fillStyle = "white";
+            ctx.fillText(count, hx + 20, hy - 20);
+
+            // ✋ パー（5）= バリア展開
+            if (count >= 4) {
+              drawBarrier(ctx, hx, hy, t);
+            }
+
+            // ✌ チョキ（2）→ 炎魔法発射
+            if (count === 2) {
+              spawnFireball(hx, hy - 20);
+            }
+          }
+        }
+      }
+    };
+  </script>
+</body>
+</html>
