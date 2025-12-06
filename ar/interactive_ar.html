@@ -47,7 +47,7 @@
         video.onloadedmetadata = resolve;
       });
 
-      // キャンバスをウィンドウサイズにフィット
+      // キャンバスはウィンドウサイズいっぱい。
       function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -67,11 +67,18 @@
         // 手の位置推定
         const predictions = await model.estimateHands(video);
 
+        // アスペクト比を維持しつつ、ウィンドウに収まる最大サイズで描画
+        const scale = Math.min(canvas.width / video.videoWidth, canvas.height / video.videoHeight);
+        const drawW = video.videoWidth * scale;
+        const drawH = video.videoHeight * scale;
+        const offsetX = (canvas.width - drawW) / 2;
+        const offsetY = (canvas.height - drawH) / 2;
+
         // 背景としてカメラ映像を左右反転で描画（インカメ用）
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
         ctx.restore();
 
         let fingerX = null;
@@ -83,10 +90,8 @@
           const [x, y] = landmarks[8];
 
           // video座標 -> キャンバス座標にスケールし、左右反転
-          const scaleX = canvas.width / video.videoWidth;
-          const scaleY = canvas.height / video.videoHeight;
-          fingerX = canvas.width - x * scaleX;
-          fingerY = y * scaleY;
+          fingerX = canvas.width - (offsetX + x * scale);
+          fingerY = offsetY + y * scale;
 
           // 軌跡リストに追加（表示座標で保存）
           trail.push({ x: fingerX, y: fingerY, life: 1.0 });
