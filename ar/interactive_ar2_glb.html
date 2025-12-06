@@ -37,8 +37,12 @@
   <model-viewer id="face-model"
                 src="../models/cat2.glb"
                 autoplay
+                disable-tap
+                disable-pan
                 disable-zoom
-                camera-controls>
+                camera-controls="false"
+                gesture-controls="none"
+            >
   </model-viewer>
 
   <!-- MediaPipe -->
@@ -223,7 +227,7 @@
         const screenY = cy;
 
         const faceWidthPx = (maxX - minX) * drawW;
-        const size = faceWidthPx * 1.4; // ちょい大きめ
+        const size = faceWidthPx * 2.0; // ちょい大きめ
 
         faceModel.style.display = "block";
         faceModel.style.left = `${screenX}px`;
