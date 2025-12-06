@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Hand Counter (MediaPipe)</title>
+  <title>Hand Counter (Stable Version)</title>
   <style>
     body {
       margin: 0;
@@ -27,51 +27,47 @@
 
   <script>
     /****************************************************
-     * 指本数カウント（MediaPipe版）
+     * 指本数カウント（左右判定つき・高精度）
      ****************************************************/
-    function countFingers(landmarks) {
-      const wrist = landmarks[0];
-      const palmRef = landmarks[9];
+    function countFingers(landmarks, handedness) {
+      let count = 0;
 
-      const palmSize = Math.hypot(
-        palmRef.x - wrist.x,
-        palmRef.y - wrist.y
-      );
+      // 親指用（左右で判定が変わる）
+      const thumbTip = landmarks[4];
+      const thumbIP  = landmarks[3];
 
+      let thumbExtended = false;
+
+      if (handedness === "Right") {
+        // 右手 → 親指は左方向に伸びる（xが小さくなる）
+        thumbExtended = thumbTip.x < thumbIP.x;
+      } else {
+        // 左手 → 親指は右方向に伸びる（xが大きくなる）
+        thumbExtended = thumbTip.x > thumbIP.x;
+      }
+
+      if (thumbExtended) count++;
+
+      // 他の4本（tip が base より上にあれば伸びている）
       const fingers = [
-        { tip: 4, base: 1 },   // 親指
         { tip: 8, base: 5 },   // 人差し指
         { tip: 12, base: 9 },  // 中指
         { tip: 16, base: 13 }, // 薬指
         { tip: 20, base: 17 }  // 小指
       ];
 
-      let count = 0;
-
       for (const f of fingers) {
-        const tip = landmarks[f.tip];
+        const tip  = landmarks[f.tip];
         const base = landmarks[f.base];
 
-        const distTip = Math.hypot(
-          tip.x - wrist.x,
-          tip.y - wrist.y
-        );
-        const distBase = Math.hypot(
-          base.x - wrist.x,
-          base.y - wrist.y
-        );
-
-        if (distTip - distBase > palmSize * 0.25) {
-          count++;
-        }
+        if (tip.y < base.y) count++;
       }
 
-      if (count === 1) return 0; // ノイズ対策
       return count;
     }
 
     /****************************************************
-     * メイン処理
+     * 描画処理
      ****************************************************/
     window.onload = async () => {
       const video = document.getElementById("video");
@@ -113,10 +109,10 @@
       camera.start();
 
       /****************************************************
-       * 描画（手ごとに数字を表示）
+       * onResults（両手の指本数を画面に表示）
        ****************************************************/
       function onResults(results) {
-        // 背景（カメラ映像）を左右反転して描画
+        // カメラ映像を左右反転して描画
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
@@ -132,20 +128,22 @@
         ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
         ctx.restore();
 
-        // 両手処理
+        // 両手を処理
         if (results.multiHandLandmarks) {
-          for (const lm of results.multiHandLandmarks) {
-            const fingerCount = countFingers(lm);
+          for (let i = 0; i < results.multiHandLandmarks.length; i++) {
 
-            // 人差し指付け根の座標を使う
+            const lm = results.multiHandLandmarks[i];
+            const handedness = results.multiHandedness[i].label; // "Right" or "Left"
+
+            const fingerCount = countFingers(lm, handedness);
+
             const hx = lm[5].x * drawW + offsetX;
             const hy = lm[5].y * drawH + offsetY;
 
-            // 左右反転後の位置調整
-            const screenX = canvas.width - hx;
+            const screenX = canvas.width - hx; // 左右反転
             const screenY = hy;
 
-            // 指の本数表示
+            // 数字を描画
             ctx.font = "40px sans-serif";
             ctx.fillStyle = "rgba(255,255,255,0.95)";
             ctx.strokeStyle = "rgba(0,0,0,0.7)";
@@ -154,7 +152,7 @@
             ctx.strokeText(fingerCount, screenX + 20, screenY - 20);
             ctx.fillText(fingerCount, screenX + 20, screenY - 20);
 
-            // 目印の点
+            // 位置マーカー
             ctx.beginPath();
             ctx.arc(screenX, screenY, 8, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(0,255,255,0.8)";
