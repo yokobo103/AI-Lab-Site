@@ -13,7 +13,7 @@
       display: block;
     }
     video {
-      display: none; /* 映像は隠しておく（canvasに描く用） */
+      display: none; /* 映像は隠しておく。キャンバスに描く用。*/
     }
   </style>
 </head>
@@ -42,47 +42,58 @@
       });
       video.srcObject = stream;
 
-      // メタデータ読み込み完了待ち
+      // メタデータ読み込み完了を待つ
       await new Promise(resolve => {
-        video.onloadedmetadata = () => {
-          resolve();
-        };
+        video.onloadedmetadata = resolve;
       });
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // キャンバスをウィンドウサイズにフィット
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
 
       // 2. モデル読み込み
       await tf.ready();
       const model = await handpose.load();
 
-      // 指の軌跡用
+      // 手の軌跡用
       let trail = [];
 
-      // 3. 描画ループ
+      // 3. 描画ルーチン
       async function render() {
         // 手の位置推定
         const predictions = await model.estimateHands(video);
 
-        // 背景としてカメラ映像を描画
+        // 背景としてカメラ映像を左右反転で描画（インカメ用）
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
 
         let fingerX = null;
         let fingerY = null;
 
         if (predictions.length > 0) {
-          // 0番目の手の人差し指の先端（ランドマーク 8）を使う
+          // 0番目の手・人差し指の先端（ランドマーク 8）を使う
           const landmarks = predictions[0].landmarks;
-          const [x, y, z] = landmarks[8];
-          fingerX = x;
-          fingerY = y;
+          const [x, y] = landmarks[8];
 
-          // 軌跡リストに追加
-          trail.push({ x, y, life: 1.0 });
+          // video座標 -> キャンバス座標にスケールし、左右反転
+          const scaleX = canvas.width / video.videoWidth;
+          const scaleY = canvas.height / video.videoHeight;
+          fingerX = canvas.width - x * scaleX;
+          fingerY = y * scaleY;
+
+          // 軌跡リストに追加（表示座標で保存）
+          trail.push({ x: fingerX, y: fingerY, life: 1.0 });
           if (trail.length > 20) trail.shift();
         }
 
-        // 4. エフェクト描画（指先の周りに光の輪＋軌跡）
+        // 4. エフェクト描画：指先の周りに光の輪と軌跡など
         // 軌跡
         for (const p of trail) {
           ctx.beginPath();
@@ -93,7 +104,7 @@
           p.life *= 0.9; // だんだん消えていく
         }
 
-        // 指先のメインオーラ
+        // 手元のメインオーラ
         if (fingerX !== null) {
           ctx.beginPath();
           ctx.arc(fingerX, fingerY, 40, 0, Math.PI * 2);
