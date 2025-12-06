@@ -8,10 +8,35 @@
 const cdlePosts = [
     {
         id: 'cdle-001',
-        title: '超初心者🔰の勉強のじかん①（ドロップアウトと過学習）',
-        url: 'https://cdle.jp/blogs/df1093f96b54',
+        title: '超初心者🔰が自分のwebサイトをつくる【Antigravity】',
+        url: 'https://cdle.jp/blogs/ffb76d24c03a',
         // thumb: 'https://example.com/your-ogp.png', // 手動指定する場合
-        desc: '超初心者🔰の勉強のじかん①（ドロップアウトと過学習）'
+        //desc: ''
+    },
+    {
+        id: 'cdle-002',
+        title: '超初心者🔰がモザイクを取り払う',
+        url: 'https://cdle.jp/blogs/9ce809712d93',
+    },
+        {
+        id: 'cdle-003',
+        title: '超初心者🔰が世界に色をつける',
+        url: 'https://cdle.jp/blogs/6c482fd3c526',   
+    },
+    {
+        id: 'cdle-004',
+        title: '超初心者🔰がチャットモンスターバトルにチャレンジしてみた話',
+        url: 'https://cdle.jp/blogs/3b5b784f674c',   
+    },
+    {
+        id: 'cdle-005',
+        title: '超初心者🔰がチャトモンに新機能を追加してみた',
+        url: 'https://cdle.jp/blogs/1097ac766312',   
+    },
+    {
+        id: 'cdle-006',
+        title: '超初心者🔰がmulmocast使ってみた',
+        url: 'https://cdle.jp/blogs/3f95fe98c9d3',   
     }
 ];
 
