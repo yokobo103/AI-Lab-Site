@@ -99,43 +99,63 @@
 
     /****************************************************
      * バリア描画（magic_shield と同じ PNG を使用）
+     * パー維持中は貼りっぱなし、離したらフェードアウト
      ****************************************************/
     const shieldImg = new Image();
     shieldImg.src = "ar_images/shield_hex.png";
-    const shields = [];
-    const shieldCooldown = {}; // 手ごとのクールダウン
 
-    function spawnShield(handKey, x, y) {
-      const now = performance.now();
-      const last = shieldCooldown[handKey] || 0;
-      if (now - last < 500) return; // 連打防止
-      shieldCooldown[handKey] = now;
-      shields.push({ x, y, start: now, duration: 700 });
+    const shields = new Map(); // handKey -> { x, y, start, hold, releaseAt }
+    const BASE_SIZE = 320;     // 少し大きめに
+    const POP_DURATION = 900;  // 立ち上がりをゆっくり
+    const RELEASE_DURATION = 700;
+
+    function ensureShield(handKey, x, y, t) {
+      let s = shields.get(handKey);
+      if (!s) {
+        s = { x, y, start: t, hold: true, releaseAt: null };
+        shields.set(handKey, s);
+      }
+      s.x = x;
+      s.y = y;
+      s.hold = true;      // パー継続中
+    }
+
+    function releaseShield(handKey, t) {
+      const s = shields.get(handKey);
+      if (s && s.hold) {
+        s.hold = false;
+        s.releaseAt = t;
+      }
     }
 
     function drawShields(ctx, t) {
       if (!shieldImg.complete) return;
-      const baseSize = 260;
 
-      for (let i = shields.length - 1; i >= 0; i--) {
-        const s = shields[i];
-        const p = (t - s.start) / s.duration;
-        if (p >= 1) {
-          shields.splice(i, 1);
-          continue;
-        }
-
-        // keyframe に近い簡易補間: 0->0.1scale/0alpha, 0.2->1/1, 1->1.3/0
+      for (const [key, s] of shields) {
         let scale, alpha;
-        if (p < 0.2) {
-          scale = 0.1 + (1 - 0.1) * (p / 0.2);
-          alpha = p / 0.2;
+
+        if (s.hold) {
+          const p = Math.min(1, (t - s.start) / POP_DURATION);
+          if (p < 1) {
+            // 立ち上がりアニメ（ゆっくり）
+            scale = 0.1 + (1 - 0.1) * p;
+            alpha = p;
+          } else {
+            // 貼りっぱなし中はゆるく呼吸
+            scale = 1.05 + Math.sin(t / 700) * 0.08;
+            alpha = 0.9;
+          }
         } else {
-          scale = 1 + 0.3 * ((p - 0.2) / 0.8);
-          alpha = 1 - (p - 0.2) / 0.8;
+          const p = (t - s.releaseAt) / RELEASE_DURATION;
+          if (p >= 1) {
+            shields.delete(key);
+            continue;
+          }
+          scale = 1.0 + 0.3 * p;
+          alpha = 0.9 * (1 - p);
         }
 
-        const size = baseSize * scale;
+        const size = BASE_SIZE * scale;
         const x = s.x - size / 2;
         const y = s.y - size / 2;
 
@@ -210,6 +230,8 @@
 
         // 3. 手検出結果を処理
         if (results.multiHandLandmarks) {
+          const seenHands = new Set();
+
           for (let i = 0; i < results.multiHandLandmarks.length; i++) {
             const lm = results.multiHandLandmarks[i];
             const handedness = results.multiHandedness[i].label; // "Right" / "Left"
@@ -253,13 +275,21 @@
             // パー → シールド発動
             if (isOpenHand) {
               const handKey = `${handedness}_${i}`;
-              spawnShield(handKey, screenX, screenY);
+              seenHands.add(handKey);
+              ensureShield(handKey, screenX, screenY, t);
             }
 
             // チョキ → 炎魔法発射
             if (isPeace) {
               const handKey = `${handedness}_${i}`;
               spawnFireball(handKey, screenX, screenY - 20);
+            }
+          }
+
+          // 開いていない手はフェードアウトへ
+          for (const key of shields.keys()) {
+            if (!seenHands.has(key)) {
+              releaseShield(key, t);
             }
           }
         }
