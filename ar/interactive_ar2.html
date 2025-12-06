@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>Hand Counter Demo</title>
+  <title>Hand Counter (MediaPipe)</title>
   <style>
     body {
       margin: 0;
@@ -13,31 +13,30 @@
       display: block;
     }
     video {
-      display: none; /* 映像は隠しておく。キャンバスに描く用。*/
+      display: none;
     }
   </style>
 </head>
 <body>
-  <video id="video" autoplay playsinline></video>
+  <video id="video" playsinline></video>
   <canvas id="canvas"></canvas>
 
-  <!-- TensorFlow.js 本体 -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
-
-  <!-- 手検出モデル Handpose -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
   <script>
-    // 指の本数を数える関数（手の大きさスケールを考慮）
+    /****************************************************
+     * 指本数カウント（MediaPipe版）
+     ****************************************************/
     function countFingers(landmarks) {
-      const wrist = landmarks[0];     // 手首
-      const palmRef = landmarks[9];   // 中指付け根あたり
+      const wrist = landmarks[0];
+      const palmRef = landmarks[9];
+
       const palmSize = Math.hypot(
-        palmRef[0] - wrist[0],
-        palmRef[1] - wrist[1]
-      ) || 1; // 0割り防止
+        palmRef.x - wrist.x,
+        palmRef.y - wrist.y
+      );
 
       const fingers = [
         { tip: 4, base: 1 },   // 親指
@@ -48,109 +47,122 @@
       ];
 
       let count = 0;
+
       for (const f of fingers) {
         const tip = landmarks[f.tip];
         const base = landmarks[f.base];
 
-        const distTip  = Math.hypot(tip[0]  - wrist[0], tip[1]  - wrist[1]);
-        const distBase = Math.hypot(base[0] - wrist[0], base[1] - wrist[1]);
+        const distTip = Math.hypot(
+          tip.x - wrist.x,
+          tip.y - wrist.y
+        );
+        const distBase = Math.hypot(
+          base.x - wrist.x,
+          base.y - wrist.y
+        );
 
-        // 先端が付け根より「十分に」遠ければ伸びているとみなす
         if (distTip - distBase > palmSize * 0.25) {
           count++;
         }
       }
 
-      // ノイズ対策で 1 本だけ浮いた時は 0 に丸める
-      if (count === 1) {
-        return 0;
-      }
+      if (count === 1) return 0; // ノイズ対策
       return count;
     }
 
-    (async () => {
-      const video = document.getElementById('video');
-      const canvas = document.getElementById('canvas');
-      const ctx = canvas.getContext('2d');
+    /****************************************************
+     * メイン処理
+     ****************************************************/
+    window.onload = async () => {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
 
-      // 1. カメラ取得
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
-        audio: false
-      });
-      video.srcObject = stream;
-
-      await new Promise(resolve => { video.onloadedmetadata = resolve; });
-
-      // キャンバスはウィンドウサイズいっぱい
       function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       }
       resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener("resize", resizeCanvas);
 
-      // 2. モデル読み込み
-      await tf.ready();
-      const model = await handpose.load();
+      /****************************************************
+       * MediaPipe Hands 初期化
+       ****************************************************/
+      const hands = new Hands({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }
+      });
 
-      // 3. 描画ループ
-      async function render() {
-        // 手の位置推定
-        const predictions = await model.estimateHands(video);
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
+      });
 
-        // アスペクト比を維持しつつ、ウィンドウに収まる最大サイズで描画（左右反転）
-        const scale = Math.min(
-          canvas.width / video.videoWidth,
-          canvas.height / video.videoHeight
-        );
-        const drawW = video.videoWidth * scale;
-        const drawH = video.videoHeight * scale;
-        const offsetX = (canvas.width - drawW) / 2;
-        const offsetY = (canvas.height - drawH) / 2;
+      hands.onResults(onResults);
 
-        // 背景（カメラ映像）を描画：左右反転
+      const camera = new Camera(video, {
+        onFrame: async () => {
+          await hands.send({ image: video });
+        },
+        width: 640,
+        height: 480
+      });
+      camera.start();
+
+      /****************************************************
+       * 描画（手ごとに数字を表示）
+       ****************************************************/
+      function onResults(results) {
+        // 背景（カメラ映像）を左右反転して描画
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
+
+        const videoW = video.videoWidth;
+        const videoH = video.videoHeight;
+        const scale = Math.min(canvas.width / videoW, canvas.height / videoH);
+        const drawW = videoW * scale;
+        const drawH = videoH * scale;
+        const offsetX = (canvas.width - drawW) / 2;
+        const offsetY = (canvas.height - drawH) / 2;
+
         ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
         ctx.restore();
 
-        // 手ごとに処理（複数手対応）
-        for (const hand of predictions) {
-          const landmarks = hand.landmarks;
+        // 両手処理
+        if (results.multiHandLandmarks) {
+          for (const lm of results.multiHandLandmarks) {
+            const fingerCount = countFingers(lm);
 
-          // 手の中点っぽい位置：人差し指付け根を使う
-          const [hx, hy] = landmarks[5];
+            // 人差し指付け根の座標を使う
+            const hx = lm[5].x * drawW + offsetX;
+            const hy = lm[5].y * drawH + offsetY;
 
-          // スクリーン座標にスケールしつつ左右反転
-          const screenHx = canvas.width - (offsetX + hx * scale);
-          const screenHy = offsetY + hy * scale;
+            // 左右反転後の位置調整
+            const screenX = canvas.width - hx;
+            const screenY = hy;
 
-          const fingerCount = countFingers(landmarks);
+            // 指の本数表示
+            ctx.font = "40px sans-serif";
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            ctx.strokeStyle = "rgba(0,0,0,0.7)";
+            ctx.lineWidth = 5;
 
-          // 本数表示（手の近く）
-          ctx.font = "36px sans-serif";
-          ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-          ctx.strokeStyle = "rgba(0, 0, 0, 0.7)";
-          ctx.lineWidth = 4;
+            ctx.strokeText(fingerCount, screenX + 20, screenY - 20);
+            ctx.fillText(fingerCount, screenX + 20, screenY - 20);
 
-          const text = fingerCount.toString();
-          ctx.strokeText(text, screenHx + 20, screenHy - 20);
-          ctx.fillText(text, screenHx + 20, screenHy - 20);
-
-          // 参考までに、手の位置マーカー（小さな円）
-          ctx.beginPath();
-          ctx.arc(screenHx, screenHy, 8, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(0, 255, 255, 0.7)";
-          ctx.fill();
+            // 目印の点
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, 8, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0,255,255,0.8)";
+            ctx.fill();
+          }
         }
-
-        requestAnimationFrame(render);
       }
-
-      render();
-    })();
+    };
   </script>
 </body>
 </html>
