@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hand Magic (Barrier & Directional Fire)</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+    }
+    video {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <video id="video" playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <script>
+    /****************************************************
+     * 炎スプライト読み込み
+     * fire_sprite.png: 1280x720, 横10コマ → 1フレーム128x720
+     ****************************************************/
+    const fireSprite = new Image();
+    fireSprite.src = "ar_images/fire_sprite.png";
+    const FRAME_COUNT = 10;
+    let spriteLoaded = false;
+    fireSprite.onload = () => {
+      spriteLoaded = true;
+      console.log("fire_sprite loaded");
+    };
+
+    /****************************************************
+     * 指の状態・本数を取得（左右判定つき）
+     ****************************************************/
+    function getFingerStates(landmarks, handedness) {
+      let thumb = false;
+      let index = false;
+      let middle = false;
+      let ring = false;
+      let pinky = false;
+
+      // 親指 x 方向で判定（左右で向きが逆）
+      const thumbTip = landmarks[4];
+      const thumbIP  = landmarks[3];
+      if (handedness === "Right") {
+        thumb = thumbTip.x < thumbIP.x - 0.02;
+      } else {
+        thumb = thumbTip.x > thumbIP.x + 0.02;
+      }
+
+      // 他4本は「tip が base より上」にあれば伸びている
+      const above = (tipIdx, baseIdx) => {
+        const tip  = landmarks[tipIdx];
+        const base = landmarks[baseIdx];
+        return tip.y < base.y - 0.01;
+      };
+
+      index  = above(8, 5);   // 人差し指
+      middle = above(12, 9);  // 中指
+      ring   = above(16, 13); // 薬指
+      pinky  = above(20, 17); // 小指
+
+      const count = [thumb, index, middle, ring, pinky].filter(Boolean).length;
+      return { thumb, index, middle, ring, pinky, count };
+    }
+
+    /****************************************************
+     * 炎の弾 管理（方向付き＆スプライト描画）
+     ****************************************************/
+    const fireballs = [];
+    const fireCooldown = {}; // 手ごとのクールダウン用
+
+    function spawnFireball(handKey, x, y, dirX, dirY) {
+      const now = performance.now();
+      const last = fireCooldown[handKey] || 0;
+      if (now - last < 120) return; // 連射しすぎ防止
+      fireCooldown[handKey] = now;
+
+      const speed = 18;
+      fireballs.push({
+        x: x + dirX * 30,
+        y: y + dirY * 30,
+        vx: dirX * speed,
+        vy: dirY * speed,
+        frame: 0,
+        life: 60
+      });
+    }
+
+    function drawFireballs(ctx) {
+      if (!spriteLoaded) return;
+
+      const frameW = fireSprite.width / FRAME_COUNT; // 1280 / 10 = 128
+      const frameH = fireSprite.height;              // 720
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter"; // 黒背景を飛ばす加算合成
+
+      for (let i = fireballs.length - 1; i >= 0; i--) {
+        const b = fireballs[i];
+
+        b.x += b.vx;
+        b.y += b.vy;
+        b.life--;
+        b.frame = (b.frame + 1) % FRAME_COUNT;
+
+        const sx = frameW * b.frame;
+        const sy = 0;
+
+        ctx.drawImage(
+          fireSprite,
+          sx, sy, frameW, frameH,
+          b.x - frameW / 2,
+          b.y - frameH / 2,
+          frameW, frameH
+        );
+
+        if (b.life <= 0) {
+          fireballs.splice(i, 1);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    /****************************************************
+     * バリア描画（magic_shield PNG）
+     * パー維持中は貼りっぱなし、離したらフェードアウト
+     ****************************************************/
+    const shieldImg = new Image();
+    shieldImg.src = "ar_images/shield_hex.png";
+
+    const shields = new Map(); // handKey -> { x, y, start, hold, releaseAt }
+    const BASE_SIZE = 320;
+    const POP_DURATION = 900;
+    const RELEASE_DURATION = 700;
+
+    function ensureShield(handKey, x, y, t) {
+      let s = shields.get(handKey);
+      if (!s) {
+        s = { x, y, start: t, hold: true, releaseAt: null };
+        shields.set(handKey, s);
+      }
+      s.x = x;
+      s.y = y;
+      s.hold = true;
+    }
+
+    function releaseShield(handKey, t) {
+      const s = shields.get(handKey);
+      if (s && s.hold) {
+        s.hold = false;
+        s.releaseAt = t;
+      }
+    }
+
+    function drawShields(ctx, t) {
+      if (!shieldImg.complete) return;
+
+      for (const [key, s] of shields) {
+        let scale, alpha;
+
+        if (s.hold) {
+          const p = Math.min(1, (t - s.start) / POP_DURATION);
+          if (p < 1) {
+            scale = 0.1 + (1 - 0.1) * p;
+            alpha = p;
+          } else {
+            scale = 1.05 + Math.sin(t / 700) * 0.08;
+            alpha = 0.9;
+          }
+        } else {
+          const p = (t - s.releaseAt) / RELEASE_DURATION;
+          if (p >= 1) {
+            shields.delete(key);
+            continue;
+          }
+          scale = 1.0 + 0.3 * p;
+          alpha = 0.9 * (1 - p);
+        }
+
+        const size = BASE_SIZE * scale;
+        const x = s.x - size / 2;
+        const y = s.y - size / 2;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.globalCompositeOperation = "screen";
+        ctx.drawImage(shieldImg, x, y, size, size);
+        ctx.restore();
+      }
+    }
+
+    /****************************************************
+     * メイン処理
+     ****************************************************/
+    window.onload = async () => {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+
+      const hands = new Hands({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
+      });
+
+      hands.onResults(onResults);
+
+      const camera = new Camera(video, {
+        onFrame: async () => {
+          await hands.send({ image: video });
+        },
+        width: 640,
+        height: 480
+      });
+      camera.start();
+
+      function onResults(results) {
+        const t = performance.now();
+
+        // 1. カメラ映像を左右反転しつつアスペクト比維持で描画
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+
+        const videoW = video.videoWidth || 640;
+        const videoH = video.videoHeight || 480;
+        const scale = Math.min(canvas.width / videoW, canvas.height / videoH);
+        const drawW = videoW * scale;
+        const drawH = videoH * scale;
+        const offsetX = (canvas.width - drawW) / 2;
+        const offsetY = (canvas.height - drawH) / 2;
+
+        ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
+        ctx.restore();
+
+        // 2. エフェクト描画
+        drawFireballs(ctx);
+        drawShields(ctx, t);
+
+        // 3. 手検出結果を処理
+        if (results.multiHandLandmarks) {
+          const seenHands = new Set();
+
+          for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+            const lm = results.multiHandLandmarks[i];
+            const handedness = results.multiHandedness[i].label; // "Right" / "Left"
+
+            const states = getFingerStates(lm, handedness);
+            const count = states.count;
+
+            // 手の基準位置（人差し指付け根）と先端（向き用）
+            const baseX = lm[5].x * drawW + offsetX;
+            const baseY = lm[5].y * drawH + offsetY;
+            const tipX  = lm[8].x * drawW + offsetX;
+            const tipY  = lm[8].y * drawH + offsetY;
+
+            // 反転後のスクリーン座標
+            const screenBaseX = canvas.width - baseX;
+            const screenBaseY = baseY;
+            const screenTipX  = canvas.width - tipX;
+            const screenTipY  = tipY;
+
+            // 向きベクトル（手の位置→指先）
+            let dirX = screenTipX - screenBaseX;
+            let dirY = screenTipY - screenBaseY;
+            const len = Math.hypot(dirX, dirY) || 1;
+            dirX /= len;
+            dirY /= len;
+
+            // デバッグ用の数字表示
+            ctx.font = "32px sans-serif";
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            ctx.strokeStyle = "rgba(0,0,0,0.7)";
+            ctx.lineWidth = 4;
+            ctx.strokeText(count, screenBaseX + 20, screenBaseY - 24);
+            ctx.fillText(count, screenBaseX + 20, screenBaseY - 24);
+
+            // 位置マーカー
+            ctx.beginPath();
+            ctx.arc(screenBaseX, screenBaseY, 6, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0,255,255,0.8)";
+            ctx.fill();
+
+            const handKey = `${handedness}_${i}`;
+            const isOpenHand =
+              states.index && states.middle && states.ring && states.pinky;
+            const isPeace =
+              states.index &&
+              states.middle &&
+              !states.ring &&
+              !states.pinky;
+
+            // パー → シールド発動
+            if (isOpenHand) {
+              seenHands.add(handKey);
+              ensureShield(handKey, screenBaseX, screenBaseY, t);
+            }
+
+            // チョキ → 手の向きに炎魔法
+            if (isPeace) {
+              spawnFireball(handKey, screenBaseX, screenBaseY, dirX, dirY);
+            }
+          }
+
+          // パーをやめた手のシールドはフェードアウトへ
+          for (const key of shields.keys()) {
+            if (!seenHands.has(key)) {
+              releaseShield(key, t);
+            }
+          }
+        }
+      }
+    };
+  </script>
+</body>
+</html>

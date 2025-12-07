@@ -5,6 +5,30 @@
 
 const experiments = [
   {
+    "id": "exp-009",
+    "title": "魔法使いに俺はなる！",
+    "date": "2025-12-07",
+    "tags": [
+      "インタラクティブAR",
+      "画像認識"
+    ],
+    "image": "posts/web_images/exp-009-96919e8a.webp",
+    "summary": "ステューピファイ！",
+    "detail": {
+      "content": "<br>\n\n## これは何の実験？\n<br>\n「インタラクティブAR」にチャレンジしました。<br>\n<br>\n最後まで読んでられねーよ！って人はサイトにアクセスしてみてください。<br>\n<br>\n指の本数を数える：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar2.html<br>\n魔法を出す：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic2.html<br>\n<br>\n※カメラの使用許可をお願いします\n<br>\n---\n<br>\n\n## やってみた流れ\n<br>\n<br>\n\n1. 指の本数を数えるファイルを作成\n2. なんか一本多く数えちゃったりしたので修正\n3. せっかくなので指の本数に従って魔法がでるようにしてみた\n\n<br>\n<br>\nスマホ連携は非常にややこしそうだったので、とりあえずwebカメラで動くものを作ってみました。<br>\n<br>\n<br>\n技術的な話です。<br>\n最初はTensorFlowのHandposeを使っていたのですが、<br>\n手1本しか認識できなかったり精度が・・・だったりしたので、<br>\nGoogleのMediaPipe Handsを使用しました。<br>\n<br>\n\n![alt text](posts/web_images/exp-009-b8515186.webp)\n指の本数を誤認識している。親指のせいみたい。\n<br>\n<br>\n\n![alt text](posts/web_images/exp-009-64114169.webp)\n成功です。ネコチャンは動画編集でつけただけです。<br>\n<br>\n<br>\nせっかくなので、指の本数に応じた魔法をつけてもらいました。\n\n<br>\n<br>\nぜひURLから試してみてください。（カメラ使用許可してください！）\n<br>\n<br>\n<br>\n\n指の本数を数える：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar2.html<br>\n魔法を出す：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic2.html<br>\n<br>\n\n\n---\n<br>\n\n## 気づき・メモ\n<br>\n\n- 初めてのインタラクティブAR。なかなか楽しかった。\n- 指の形って難しい。親指が邪魔するんだねぇ。\n<br>\n\n---\n<br>\n\n## まとめ（Result）\n<br>\n\n**次回はもっと魔法をかっこよくしたい**\n<br>",
+      "links": [
+        {
+          "label": "公式サイト",
+          "url": "https://..."
+        },
+        {
+          "label": "GitHub",
+          "url": "https://..."
+        }
+      ]
+    }
+  },
+  {
     "id": "exp-008",
     "title": "ARチャレンジ2!!!",
     "date": "2025-12-05",
