@@ -31,13 +31,18 @@
      * fire_sprite.png: 1280x720, 横10コマ → 1フレーム128x720
      ****************************************************/
     const fireSprite = new Image();
-    fireSprite.src = "ar_images/fire_sprite.png";
+    fireSprite.src = "fire_sprite.png";
     const FRAME_COUNT = 10;
     let spriteLoaded = false;
     fireSprite.onload = () => {
       spriteLoaded = true;
       console.log("fire_sprite loaded");
     };
+
+    // 🔧 炎フレームのトリミング＆縮小用パラメータ
+    const CROP_MARGIN = 4;      // 上・左右のフチを少し切る
+    const WATERMARK_CROP = 100; // 下側（runwayロゴごと）をカット
+    const FIRE_SCALE = 0.5;     // 描画サイズを半分に
 
     /****************************************************
      * 指の状態・本数を取得（左右判定つき）
@@ -100,8 +105,8 @@
     function drawFireballs(ctx) {
       if (!spriteLoaded) return;
 
-      const frameW = fireSprite.width / FRAME_COUNT; // 1280 / 10 = 128
-      const frameH = fireSprite.height;              // 720
+      const fullFrameW = fireSprite.width / FRAME_COUNT; // 1280 / 10 = 128
+      const fullFrameH = fireSprite.height;              // 720
 
       ctx.save();
       ctx.globalCompositeOperation = "lighter"; // 黒背景を飛ばす加算合成
@@ -114,15 +119,25 @@
         b.life--;
         b.frame = (b.frame + 1) % FRAME_COUNT;
 
-        const sx = frameW * b.frame;
-        const sy = 0;
+        // 元フレームの位置
+        const sxFull = fullFrameW * b.frame;
+
+        // 🔧 フレームの内側だけを切り出す（フチ＆ロゴ対策）
+        const cropX = sxFull + CROP_MARGIN;
+        const cropY = CROP_MARGIN;
+        const cropW = fullFrameW - CROP_MARGIN * 2;
+        const cropH = fullFrameH - CROP_MARGIN * 2 - WATERMARK_CROP;
+
+        // 描画サイズ（半分に縮小）
+        const drawW = cropW * FIRE_SCALE;
+        const drawH = cropH * FIRE_SCALE;
 
         ctx.drawImage(
           fireSprite,
-          sx, sy, frameW, frameH,
-          b.x - frameW / 2,
-          b.y - frameH / 2,
-          frameW, frameH
+          cropX, cropY, cropW, cropH,
+          b.x - drawW / 2,
+          b.y - drawH / 2,
+          drawW, drawH
         );
 
         if (b.life <= 0) {
@@ -135,7 +150,6 @@
 
     /****************************************************
      * バリア描画（magic_shield PNG）
-     * パー維持中は貼りっぱなし、離したらフェードアウト
      ****************************************************/
     const shieldImg = new Image();
     shieldImg.src = "ar_images/shield_hex.png";
