@@ -30,19 +30,12 @@
      * 炎スプライト読み込み
      * fire_sprite.png: 1280x720, 横10コマ → 1フレーム128x720
      ****************************************************/
-    const fireSprite = new Image();
-    fireSprite.src = "ar_images/fire_sprite.png";
-    const FRAME_COUNT = 10;
-    let spriteLoaded = false;
-    fireSprite.onload = () => {
-      spriteLoaded = true;
-      console.log("fire_sprite loaded");
-    };
+      const fireSprite = new Image();
+      fireSprite.src = "ar_images/fire_sprite_tuning.png";  // 前処理後のやつ
+      const FRAME_COUNT = 10;
+      let spriteLoaded = false;
+      fireSprite.onload = () => { spriteLoaded = true; };
 
-    // 🔧 炎フレームのトリミング＆縮小用パラメータ
-    const CROP_MARGIN = 4;      // 上・左右のフチを少し切る
-    const WATERMARK_CROP = 100; // 下側（runwayロゴごと）をカット
-    const FIRE_SCALE = 0.5;     // 描画サイズを半分に
 
     /****************************************************
      * 指の状態・本数を取得（左右判定つき）
@@ -105,11 +98,11 @@
     function drawFireballs(ctx) {
       if (!spriteLoaded) return;
 
-      const fullFrameW = fireSprite.width / FRAME_COUNT; // 1280 / 10 = 128
-      const fullFrameH = fireSprite.height;              // 720
+      const frameW = fireSprite.width / FRAME_COUNT;
+      const frameH = fireSprite.height;  // もう縮小済み
 
       ctx.save();
-      ctx.globalCompositeOperation = "lighter"; // 黒背景を飛ばす加算合成
+      ctx.globalCompositeOperation = "lighter"; // 発光感を残す
 
       for (let i = fireballs.length - 1; i >= 0; i--) {
         const b = fireballs[i];
@@ -119,25 +112,15 @@
         b.life--;
         b.frame = (b.frame + 1) % FRAME_COUNT;
 
-        // 元フレームの位置
-        const sxFull = fullFrameW * b.frame;
-
-        // 🔧 フレームの内側だけを切り出す（フチ＆ロゴ対策）
-        const cropX = sxFull + CROP_MARGIN;
-        const cropY = CROP_MARGIN;
-        const cropW = fullFrameW - CROP_MARGIN * 2;
-        const cropH = fullFrameH - CROP_MARGIN * 2 - WATERMARK_CROP;
-
-        // 描画サイズ（半分に縮小）
-        const drawW = cropW * FIRE_SCALE;
-        const drawH = cropH * FIRE_SCALE;
+        const sx = frameW * b.frame;
+        const sy = 0;
 
         ctx.drawImage(
           fireSprite,
-          cropX, cropY, cropW, cropH,
-          b.x - drawW / 2,
-          b.y - drawH / 2,
-          drawW, drawH
+          sx, sy, frameW, frameH,
+          b.x - frameW / 2,
+          b.y - frameH / 2,
+          frameW, frameH
         );
 
         if (b.life <= 0) {
@@ -147,6 +130,7 @@
 
       ctx.restore();
     }
+
 
     /****************************************************
      * バリア描画（magic_shield PNG）
