@@ -102,7 +102,7 @@
       const frameH = fireSprite.height;  // もう縮小済み
 
       ctx.save();
-      ctx.globalCompositeOperation = "source-over"; // 通常合成
+      ctx.globalCompositeOperation = "screen"; // やわらかめ
 
       for (let i = fireballs.length - 1; i >= 0; i--) {
         const b = fireballs[i];
