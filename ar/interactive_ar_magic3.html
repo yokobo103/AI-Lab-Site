@@ -133,69 +133,102 @@
 
 
     /****************************************************
-     * バリア描画（magic_shield PNG）
+     * バリア描画（barrier1/2 スプライト）
+     * barrier1_1x9.png: 開閉に使用（順／逆再生）
+     * barrier2_1x9.png: 維持中ループに使用
      ****************************************************/
-    const shieldImg = new Image();
-    shieldImg.src = "ar_images/shield_hex.png";
+    const barrierOpenSprite = new Image(); // 開→閉（順・逆）
+    const barrierLoopSprite = new Image(); // 維持ループ
+    barrierOpenSprite.src = "ar_images/barrier1_1x9.png";
+    barrierLoopSprite.src = "ar_images/barrier2_1x9.png";
 
-    const shields = new Map(); // handKey -> { x, y, start, hold, releaseAt }
-    const BASE_SIZE = 320;
-    const POP_DURATION = 900;
-    const RELEASE_DURATION = 700;
+    const BARRIER_FRAME_COUNT = 9;
+    const BARRIER_FRAME_MS = 70; // 1コマあたり約70ms
+    const BARRIER_SIZE = 320;
+
+    // handKey -> { x, y, phase, frame, last, hold }
+    // phase: "opening" | "holding" | "closing"
+    const shields = new Map();
 
     function ensureShield(handKey, x, y, t) {
       let s = shields.get(handKey);
       if (!s) {
-        s = { x, y, start: t, hold: true, releaseAt: null };
+        s = { x, y, phase: "opening", frame: 0, last: t, hold: true };
         shields.set(handKey, s);
+        return;
       }
       s.x = x;
       s.y = y;
       s.hold = true;
-    }
-
-    function releaseShield(handKey, t) {
-      const s = shields.get(handKey);
-      if (s && s.hold) {
-        s.hold = false;
-        s.releaseAt = t;
+      // 閉じ途中で再度パーになった場合は開きへ戻す
+      if (s.phase === "closing") {
+        s.phase = "opening";
+        s.frame = Math.max(0, BARRIER_FRAME_COUNT - 1 - s.frame);
+        s.last = t;
       }
     }
 
+    function releaseShield(handKey) {
+      const s = shields.get(handKey);
+      if (s) s.hold = false;
+    }
+
+    function drawBarrierFrame(ctx, img, frameIndex, cx, cy) {
+      if (!img.complete || img.naturalWidth === 0) return;
+      const frameW = img.width / BARRIER_FRAME_COUNT;
+      const frameH = img.height;
+      const sx = frameW * frameIndex;
+      const sy = 0;
+      const size = BARRIER_SIZE;
+      const x = cx - size / 2;
+      const y = cy - size / 2;
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.globalCompositeOperation = "screen";
+      ctx.drawImage(img, sx, sy, frameW, frameH, x, y, size, size);
+      ctx.restore();
+    }
+
     function drawShields(ctx, t) {
-      if (!shieldImg.complete) return;
-
       for (const [key, s] of shields) {
-        let scale, alpha;
-
-        if (s.hold) {
-          const p = Math.min(1, (t - s.start) / POP_DURATION);
-          if (p < 1) {
-            scale = 0.1 + (1 - 0.1) * p;
-            alpha = p;
-          } else {
-            scale = 1.05 + Math.sin(t / 700) * 0.08;
-            alpha = 0.9;
+        const step = Math.floor((t - s.last) / BARRIER_FRAME_MS);
+        if (step > 0) {
+          s.last = t;
+          if (s.phase === "opening") {
+            s.frame = Math.min(BARRIER_FRAME_COUNT - 1, s.frame + step);
+            if (s.frame >= BARRIER_FRAME_COUNT - 1 && s.hold) {
+              s.phase = "holding";
+              s.frame = 0;
+            }
+          } else if (s.phase === "holding") {
+            if (!s.hold) {
+              s.phase = "closing";
+              s.frame = BARRIER_FRAME_COUNT - 1;
+            } else {
+              s.frame = (s.frame + step) % BARRIER_FRAME_COUNT;
+            }
+          } else if (s.phase === "closing") {
+            s.frame -= step;
+            if (s.frame < 0) {
+              shields.delete(key);
+              continue;
+            }
           }
-        } else {
-          const p = (t - s.releaseAt) / RELEASE_DURATION;
-          if (p >= 1) {
-            shields.delete(key);
-            continue;
-          }
-          scale = 1.0 + 0.3 * p;
-          alpha = 0.9 * (1 - p);
         }
 
-        const size = BASE_SIZE * scale;
-        const x = s.x - size / 2;
-        const y = s.y - size / 2;
+        let sprite, frameIdx;
+        if (s.phase === "opening") {
+          sprite = barrierOpenSprite;
+          frameIdx = s.frame;
+        } else if (s.phase === "holding") {
+          sprite = barrierLoopSprite;
+          frameIdx = s.frame;
+        } else {
+          sprite = barrierOpenSprite;
+          frameIdx = BARRIER_FRAME_COUNT - 1 - s.frame; // 逆再生
+        }
 
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.globalCompositeOperation = "screen";
-        ctx.drawImage(shieldImg, x, y, size, size);
-        ctx.restore();
+        drawBarrierFrame(ctx, sprite, frameIdx, s.x, s.y);
       }
     }
 
@@ -328,7 +361,7 @@
           // パーをやめた手のシールドはフェードアウトへ
           for (const key of shields.keys()) {
             if (!seenHands.has(key)) {
-              releaseShield(key, t);
+              releaseShield(key);
             }
           }
         }
