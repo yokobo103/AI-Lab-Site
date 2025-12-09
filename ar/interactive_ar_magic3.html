@@ -147,7 +147,7 @@
     const BARRIER_SIZE = 320;
 
     // handKey -> { x, y, phase, frame, last, hold }
-    // phase: "opening" | "holding" | "closing"
+    // phase: "opening" | "holding"
     const shields = new Map();
 
     function ensureShield(handKey, x, y, t) {
@@ -169,8 +169,8 @@
     }
 
     function releaseShield(handKey) {
-      const s = shields.get(handKey);
-      if (s) s.hold = false;
+      // 誤作動で残るのを避けるため即座に消す
+      shields.delete(handKey);
     }
 
     function drawBarrierFrame(ctx, img, frameIndex, cx, cy) {
@@ -201,18 +201,7 @@
               s.frame = 0;
             }
           } else if (s.phase === "holding") {
-            if (!s.hold) {
-              s.phase = "closing";
-              s.frame = BARRIER_FRAME_COUNT - 1;
-            } else {
-              s.frame = (s.frame + step) % BARRIER_FRAME_COUNT;
-            }
-          } else if (s.phase === "closing") {
-            s.frame -= step;
-            if (s.frame < 0) {
-              shields.delete(key);
-              continue;
-            }
+            s.frame = (s.frame + step) % BARRIER_FRAME_COUNT;
           }
         }
 
@@ -220,12 +209,10 @@
         if (s.phase === "opening") {
           sprite = barrierOpenSprite;
           frameIdx = s.frame;
-        } else if (s.phase === "holding") {
+        }
+        else { // holding
           sprite = barrierLoopSprite;
           frameIdx = s.frame;
-        } else {
-          sprite = barrierOpenSprite;
-          frameIdx = BARRIER_FRAME_COUNT - 1 - s.frame; // 逆再生
         }
 
         drawBarrierFrame(ctx, sprite, frameIdx, s.x, s.y);
