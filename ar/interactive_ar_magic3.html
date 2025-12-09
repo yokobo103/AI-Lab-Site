@@ -27,18 +27,23 @@
 
   <script>
     /****************************************************
-     * 炎スプライト読み込み
-     * fire_sprite.png: 1280x720, 横10コマ → 1フレーム128x720
+     * �e�X�v���C�g�ǂݍ���
      ****************************************************/
-      const fireSprite = new Image();
-      fireSprite.src = "ar_images/fireball_1x12.png";  // 前処理後のやつ
-      const FRAME_COUNT = 12;
-      let spriteLoaded = false;
-      fireSprite.onload = () => { spriteLoaded = true; };
+      const fireSprite    = new Image(); // 12�R�}
+      const waterSprite   = new Image(); // 9�R�}
+      const thunderSprite = new Image(); // 9�R�}
+      const toxicSprite   = new Image(); // 9�R�}
 
+      fireSprite.src    = "ar_images/fireball_1x12.png";
+      waterSprite.src   = "ar_images/waterball_1x9.png";
+      thunderSprite.src = "ar_images/thunder2_1x9.png";
+      toxicSprite.src   = "ar_images/toxicball_1x9_transparent.png";
+
+      const FIRE_FRAME_COUNT = 12;
+      const NINE_FRAME_COUNT = 9;
 
     /****************************************************
-     * 指の状態・本数を取得（左右判定つき）
+     * �w�̏�ԂƖ{�����擾�i���E������j
      ****************************************************/
     function getFingerStates(landmarks, handedness) {
       let thumb = false;
@@ -47,7 +52,7 @@
       let ring = false;
       let pinky = false;
 
-      // 親指 x 方向で判定（左右で向きが逆）
+      // �e�w�͕����Ŕ���i���E�Ō������t�j
       const thumbTip = landmarks[4];
       const thumbIP  = landmarks[3];
       if (handedness === "Right") {
@@ -56,75 +61,84 @@
         thumb = thumbTip.x > thumbIP.x + 0.02;
       }
 
-      // 他4本は「tip が base より上」にあれば伸びている
+      // ��4�{�́utip �� base ����v�ɂ���ΐL�тĂ���
       const above = (tipIdx, baseIdx) => {
         const tip  = landmarks[tipIdx];
         const base = landmarks[baseIdx];
         return tip.y < base.y - 0.01;
       };
 
-      index  = above(8, 5);   // 人差し指
-      middle = above(12, 9);  // 中指
-      ring   = above(16, 13); // 薬指
-      pinky  = above(20, 17); // 小指
+      index  = above(8, 5);
+      middle = above(12, 9);
+      ring   = above(16, 13);
+      pinky  = above(20, 17);
 
       const count = [thumb, index, middle, ring, pinky].filter(Boolean).length;
       return { thumb, index, middle, ring, pinky, count };
     }
 
+
     /****************************************************
-     * 炎の弾 管理（方向付き＆スプライト描画）
+     * �e�̐������`��i�����t���j
      ****************************************************/
-    const fireballs = [];
-    const fireCooldown = {}; // 手ごとのクールダウン用
+    const projectiles = [];
+    const projectileCooldown = {}; // �育�Ƃ̃N�[���_�E���p
 
-    function spawnFireball(handKey, x, y, dirX, dirY) {
+    const PROJECTILE_SPEED = 18;
+    const PROJECTILE_LIFE = 60;
+
+    function isSpriteReady(img) {
+      return img && img.complete && img.naturalWidth > 0;
+    }
+
+    function spawnProjectile(handKey, x, y, dirX, dirY, sprite, frameCount) {
+      if (!isSpriteReady(sprite)) return;
       const now = performance.now();
-      const last = fireCooldown[handKey] || 0;
-      if (now - last < 120) return; // 連射しすぎ防止
-      fireCooldown[handKey] = now;
+      const last = projectileCooldown[handKey] || 0;
+      if (now - last < 120) return; // �A�˂������h�~
+      projectileCooldown[handKey] = now;
 
-      const speed = 18;
-      fireballs.push({
+      projectiles.push({
         x: x + dirX * 30,
         y: y + dirY * 30,
-        vx: dirX * speed,
-        vy: dirY * speed,
+        vx: dirX * PROJECTILE_SPEED,
+        vy: dirY * PROJECTILE_SPEED,
         frame: 0,
-        life: 60
+        life: PROJECTILE_LIFE,
+        sprite,
+        frameCount,
       });
     }
 
-    function drawFireballs(ctx) {
-      if (!spriteLoaded) return;
-
-      const frameW = fireSprite.width / FRAME_COUNT;
-      const frameH = fireSprite.height;  // もう縮小済み
-
+    function drawProjectiles(ctx) {
       ctx.save();
-      ctx.globalCompositeOperation = "screen"; // やわらかめ
+      ctx.globalCompositeOperation = "screen";
 
-      for (let i = fireballs.length - 1; i >= 0; i--) {
-        const b = fireballs[i];
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        if (!isSpriteReady(p.sprite)) {
+          projectiles.splice(i, 1);
+          continue;
+        }
 
-        b.x += b.vx;
-        b.y += b.vy;
-        b.life--;
-        b.frame = (b.frame + 1) % FRAME_COUNT;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        p.frame = (p.frame + 1) % p.frameCount;
 
-        const sx = frameW * b.frame;
-        const sy = 0;
-
+        const frameW = p.sprite.width / p.frameCount;
+        const frameH = p.sprite.height;
+        const sx = frameW * p.frame;
         ctx.drawImage(
-          fireSprite,
-          sx, sy, frameW, frameH,
-          b.x - frameW / 2,
-          b.y - frameH / 2,
+          p.sprite,
+          sx, 0, frameW, frameH,
+          p.x - frameW / 2,
+          p.y - frameH / 2,
           frameW, frameH
         );
 
-        if (b.life <= 0) {
-          fireballs.splice(i, 1);
+        if (p.life <= 0) {
+          projectiles.splice(i, 1);
         }
       }
 
@@ -132,18 +146,19 @@
     }
 
 
+
     /****************************************************
-     * バリア描画（barrier1/2 スプライト）
-     * barrier1_1x9.png: 開閉に使用（順／逆再生）
+     * バリア描画�E�Earrier1/2 スプライト！E
+     * barrier1_1x9.png: 開閉に使用�E�頁E��送E�E生！E
      * barrier2_1x9.png: 維持中ループに使用
      ****************************************************/
-    const barrierOpenSprite = new Image(); // 開→閉（順・逆）
-    const barrierLoopSprite = new Image(); // 維持ループ
+    const barrierOpenSprite = new Image(); // 開�E閉（頁E�E送E��E
+    const barrierLoopSprite = new Image(); // 維持ルーチE
     barrierOpenSprite.src = "ar_images/barrier1_1x9.png";
     barrierLoopSprite.src = "ar_images/barrier2_1x9.png";
 
     const BARRIER_FRAME_COUNT = 9;
-    const BARRIER_FRAME_MS = 40; // 1コマあたり約70ms
+    const BARRIER_FRAME_MS = 70; // 1コマあたり紁E0ms
     const BARRIER_SIZE = 320;
 
     // handKey -> { x, y, phase, frame, last, hold }
@@ -160,7 +175,7 @@
       s.x = x;
       s.y = y;
       s.hold = true;
-      // 閉じ途中で再度パーになった場合は開きへ戻す
+      // 閉じ途中で再度パ�Eになった場合�E開きへ戻ぁE
       if (s.phase === "closing") {
         s.phase = "opening";
         s.frame = Math.max(0, BARRIER_FRAME_COUNT - 1 - s.frame);
@@ -220,7 +235,7 @@
     }
 
     /****************************************************
-     * メイン処理
+     * メイン処琁E
      ****************************************************/
     window.onload = async () => {
       const video = document.getElementById("video");
@@ -242,7 +257,7 @@
       hands.setOptions({
         maxNumHands: 2,
         modelComplexity: 1,
-        minDetectionConfidence: 0.7, // 誤検出を減らす
+        minDetectionConfidence: 0.7, // 誤検�Eを減らぁE
         minTrackingConfidence: 0.7
       });
 
@@ -257,7 +272,7 @@
       });
       camera.start();
 
-      // オープン判定の連続フレームを数える
+      // オープン判定�E連続フレームを数える
       const openCounters = new Map(); // handKey -> count
 
       function onResults(results) {
@@ -280,10 +295,10 @@
         ctx.restore();
 
         // 2. エフェクト描画
-        drawFireballs(ctx);
+        drawProjectiles(ctx);
         drawShields(ctx, t);
 
-        // 3. 手検出結果を処理
+        // 3. 手検�E結果を�E琁E
         if (results.multiHandLandmarks && results.multiHandLandmarks.length) {
           const seenHands = new Set();
 
@@ -294,26 +309,26 @@
             const states = getFingerStates(lm, handedness);
             const count = states.count;
 
-            // 手の基準位置（人差し指付け根）と先端（向き用）
+            // 手�E基準位置�E�人差し指付け根�E�と先端�E�向き用�E�E
             const baseX = lm[5].x * drawW + offsetX;
             const baseY = lm[5].y * drawH + offsetY;
             const tipX  = lm[8].x * drawW + offsetX;
             const tipY  = lm[8].y * drawH + offsetY;
 
-            // 反転後のスクリーン座標
+            // 反転後�Eスクリーン座樁E
             const screenBaseX = canvas.width - baseX;
             const screenBaseY = baseY;
             const screenTipX  = canvas.width - tipX;
             const screenTipY  = tipY;
 
-            // 向きベクトル（手の位置→指先）
+            // 向きベクトル�E�手の位置→指先！E
             let dirX = screenTipX - screenBaseX;
             let dirY = screenTipY - screenBaseY;
             const len = Math.hypot(dirX, dirY) || 1;
             dirX /= len;
             dirY /= len;
 
-            // デバッグ用の数字表示
+            // チE��チE��用の数字表示
             ctx.font = "32px sans-serif";
             ctx.fillStyle = "rgba(255,255,255,0.95)";
             ctx.strokeStyle = "rgba(0,0,0,0.7)";
@@ -321,7 +336,7 @@
             ctx.strokeText(count, screenBaseX + 20, screenBaseY - 24);
             ctx.fillText(count, screenBaseX + 20, screenBaseY - 24);
 
-            // 位置マーカー
+            // 位置マ�Eカー
             ctx.beginPath();
             ctx.arc(screenBaseX, screenBaseY, 6, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(0,255,255,0.8)";
@@ -336,7 +351,7 @@
               !states.ring &&
               !states.pinky;
 
-            // パー → シールド発動
+            // �p�[ �� �V�[���h����
             if (isOpenHand) {
               seenHands.add(handKey);
               const prev = openCounters.get(handKey) || 0;
@@ -350,13 +365,20 @@
               releaseShield(handKey);
             }
 
-            // チョキ → 手の向きに炎魔法
-            if (isPeace) {
-              spawnFireball(handKey, screenBaseX, screenBaseY, dirX, dirY);
+            // �w�{���Œe�����������i�����t���j
+            if (count === 0) {
+              spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, waterSprite, NINE_FRAME_COUNT);
+            } else if (count === 1) {
+              spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, thunderSprite, NINE_FRAME_COUNT);
+            } else if (count === 3) {
+              spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, toxicSprite, NINE_FRAME_COUNT);
+            } else if (isPeace) {
+              spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, fireSprite, FIRE_FRAME_COUNT);
             }
+
           }
 
-          // パーをやめた手のシールドはフェードアウトへ
+          // パ�Eをやめた手�Eシールド�Eフェードアウトへ
           for (const key of shields.keys()) {
             if (!seenHands.has(key)) {
               releaseShield(key);
@@ -364,7 +386,7 @@
             }
           }
         } else {
-          // 手が全く検出されないフレームで残留バリアをクリア
+          // 手が全く検�EされなぁE��レームで残留バリアをクリア
           shields.clear();
           openCounters.clear();
         }
@@ -373,3 +395,7 @@
   </script>
 </body>
 </html>
+
+
+
+
