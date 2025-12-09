@@ -242,8 +242,8 @@
       hands.setOptions({
         maxNumHands: 2,
         modelComplexity: 1,
-        minDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.6
+        minDetectionConfidence: 0.7, // 誤検出を減らす
+        minTrackingConfidence: 0.7
       });
 
       hands.onResults(onResults);
@@ -256,6 +256,9 @@
         height: 480
       });
       camera.start();
+
+      // オープン判定の連続フレームを数える
+      const openCounters = new Map(); // handKey -> count
 
       function onResults(results) {
         const t = performance.now();
@@ -281,7 +284,7 @@
         drawShields(ctx, t);
 
         // 3. 手検出結果を処理
-        if (results.multiHandLandmarks) {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length) {
           const seenHands = new Set();
 
           for (let i = 0; i < results.multiHandLandmarks.length; i++) {
@@ -336,7 +339,15 @@
             // パー → シールド発動
             if (isOpenHand) {
               seenHands.add(handKey);
-              ensureShield(handKey, screenBaseX, screenBaseY, t);
+              const prev = openCounters.get(handKey) || 0;
+              const nowCnt = Math.min(prev + 1, 10);
+              openCounters.set(handKey, nowCnt);
+              if (nowCnt >= 3) {
+                ensureShield(handKey, screenBaseX, screenBaseY, t);
+              }
+            } else {
+              openCounters.set(handKey, 0);
+              releaseShield(handKey);
             }
 
             // チョキ → 手の向きに炎魔法
@@ -349,8 +360,13 @@
           for (const key of shields.keys()) {
             if (!seenHands.has(key)) {
               releaseShield(key);
+              openCounters.delete(key);
             }
           }
+        } else {
+          // 手が全く検出されないフレームで残留バリアをクリア
+          shields.clear();
+          openCounters.clear();
         }
       }
     };
