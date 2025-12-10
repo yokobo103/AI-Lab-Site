@@ -27,12 +27,12 @@
 
   <script>
     /****************************************************
-     * �e�X�v���C�g�ǂݍ���
+     * �E�e�E�X�E�v�E��E��E�C�E�g�E�ǂݍ��E��E�
      ****************************************************/
-      const fireSprite    = new Image(); // 12�R�}
-      const waterSprite   = new Image(); // 9�R�}
-      const thunderSprite = new Image(); // 9�R�}
-      const toxicSprite   = new Image(); // 9�R�}
+      const fireSprite    = new Image(); // 12�E�R�E�}
+      const waterSprite   = new Image(); // 9�E�R�E�}
+      const thunderSprite = new Image(); // 9�E�R�E�}
+      const toxicSprite   = new Image(); // 9�E�R�E�}
 
       fireSprite.src    = "ar_images/fireball_1x12.png";
       waterSprite.src   = "ar_images/waterball_1x9.png";
@@ -43,7 +43,7 @@
       const NINE_FRAME_COUNT = 9;
 
     /****************************************************
-     * �w�̏�ԂƖ{�����擾�i���E������j
+     * �E�w�E�̏�ԂƖ{�E��E��E��E��E�擾�E�i�E��E��E�E�E��E��E��E���E�j
      ****************************************************/
     function getFingerStates(landmarks, handedness) {
       let thumb = false;
@@ -52,7 +52,7 @@
       let ring = false;
       let pinky = false;
 
-      // �e�w�͕����Ŕ���i���E�Ō������t�j
+      // �E�e�E�w�E�͕��E��E��E�Ŕ��E��E�i�E��E��E�E�E�Ō��E��E��E��E��E�t�E�j
       const thumbTip = landmarks[4];
       const thumbIP  = landmarks[3];
       if (handedness === "Right") {
@@ -61,7 +61,7 @@
         thumb = thumbTip.x > thumbIP.x + 0.02;
       }
 
-      // ��4�{�́utip �� base ����v�ɂ���ΐL�тĂ���
+      // �E��E�4�E�{�E�́utip �E��E� base �E��E��E��E�v�E�ɂ��E��E�ΐL�E�тĂ��E��E�
       const above = (tipIdx, baseIdx) => {
         const tip  = landmarks[tipIdx];
         const base = landmarks[baseIdx];
@@ -79,10 +79,11 @@
 
 
     /****************************************************
-     * �e�̐������`��i�����t���j
+     * �e�̐������`��i�����t���j
      ****************************************************/
     const projectiles = [];
-    const projectileCooldown = {}; // �育�Ƃ̃N�[���_�E���p
+    const projectileCooldown = {}; // �育�Ƃ̃N�[���_�E���p
+    const lastDirs = new Map();    // handKey -> {x,y}
 
     const PROJECTILE_SPEED = 18;
     const PROJECTILE_LIFE = 60;
@@ -91,18 +92,31 @@
       return img && img.complete && img.naturalWidth > 0;
     }
 
+    function resolveDir(handKey, dirX, dirY) {
+      const len = Math.hypot(dirX, dirY);
+      if (len > 0.2) {
+        const nx = dirX / len;
+        const ny = dirY / len;
+        lastDirs.set(handKey, { x: nx, y: ny });
+        return { x: nx, y: ny };
+      }
+      return lastDirs.get(handKey) || { x: 0, y: -1 }; // �f�t�H���g�����
+    }
+
     function spawnProjectile(handKey, x, y, dirX, dirY, sprite, frameCount) {
       if (!isSpriteReady(sprite)) return;
       const now = performance.now();
       const last = projectileCooldown[handKey] || 0;
-      if (now - last < 120) return; // �A�˂������h�~
+      if (now - last < 120) return; // �A�˂������h�~
       projectileCooldown[handKey] = now;
 
+      const d = resolveDir(handKey, dirX, dirY);
+
       projectiles.push({
-        x: x + dirX * 30,
-        y: y + dirY * 30,
-        vx: dirX * PROJECTILE_SPEED,
-        vy: dirY * PROJECTILE_SPEED,
+        x: x + d.x * 30,
+        y: y + d.y * 30,
+        vx: d.x * PROJECTILE_SPEED,
+        vy: d.y * PROJECTILE_SPEED,
         frame: 0,
         life: PROJECTILE_LIFE,
         sprite,
@@ -119,6 +133,13 @@
         if (!isSpriteReady(p.sprite)) {
           projectiles.splice(i, 1);
           continue;
+        }
+
+        // toxic �����F��Z������
+        if (p.sprite === toxicSprite) {
+          ctx.filter = "saturate(1.8) brightness(1.2)";
+        } else {
+          ctx.filter = "none";
         }
 
         p.x += p.vx;
@@ -142,17 +163,17 @@
         }
       }
 
+      ctx.filter = "none";
       ctx.restore();
     }
 
 
-
     /****************************************************
-     * バリア描画�E�Earrier1/2 スプライト！E
-     * barrier1_1x9.png: 開閉に使用�E�頁E��送E�E生！E
+     * バリア描画�E�E�E�Earrier1/2 スプライト！E
+     * barrier1_1x9.png: 開閉に使用�E�E�E�頁E�E��E�送E�E�E生！E
      * barrier2_1x9.png: 維持中ループに使用
      ****************************************************/
-    const barrierOpenSprite = new Image(); // 開�E閉（頁E�E送E��E
+    const barrierOpenSprite = new Image(); // 開�E閉（頁E�E�E送E�E��E�E
     const barrierLoopSprite = new Image(); // 維持ルーチE
     barrierOpenSprite.src = "ar_images/barrier1_1x9.png";
     barrierLoopSprite.src = "ar_images/barrier2_1x9.png";
@@ -175,7 +196,7 @@
       s.x = x;
       s.y = y;
       s.hold = true;
-      // 閉じ途中で再度パ�Eになった場合�E開きへ戻ぁE
+      // 閉じ途中で再度パ�Eになった場合�E開きへ戻ぁE
       if (s.phase === "closing") {
         s.phase = "opening";
         s.frame = Math.max(0, BARRIER_FRAME_COUNT - 1 - s.frame);
@@ -257,7 +278,7 @@
       hands.setOptions({
         maxNumHands: 2,
         modelComplexity: 1,
-        minDetectionConfidence: 0.7, // 誤検�Eを減らぁE
+        minDetectionConfidence: 0.7, // 誤検�Eを減らぁE
         minTrackingConfidence: 0.7
       });
 
@@ -272,7 +293,7 @@
       });
       camera.start();
 
-      // オープン判定�E連続フレームを数える
+      // オープン判定�E連続フレームを数える
       const openCounters = new Map(); // handKey -> count
 
       function onResults(results) {
@@ -298,7 +319,7 @@
         drawProjectiles(ctx);
         drawShields(ctx, t);
 
-        // 3. 手検�E結果を�E琁E
+        // 3. 手検�E結果を�E琁E
         if (results.multiHandLandmarks && results.multiHandLandmarks.length) {
           const seenHands = new Set();
 
@@ -309,26 +330,26 @@
             const states = getFingerStates(lm, handedness);
             const count = states.count;
 
-            // 手�E基準位置�E�人差し指付け根�E�と先端�E�向き用�E�E
+            // 手�E基準位置�E�E�E�人差し指付け根�E�E�E�と先端�E�E�E�向き用�E�E�E�E
             const baseX = lm[5].x * drawW + offsetX;
             const baseY = lm[5].y * drawH + offsetY;
             const tipX  = lm[8].x * drawW + offsetX;
             const tipY  = lm[8].y * drawH + offsetY;
 
-            // 反転後�Eスクリーン座樁E
+            // 反転後�Eスクリーン座樁E
             const screenBaseX = canvas.width - baseX;
             const screenBaseY = baseY;
             const screenTipX  = canvas.width - tipX;
             const screenTipY  = tipY;
 
-            // 向きベクトル�E�手の位置→指先！E
+            // 向きベクトル�E�E�E�手�E位置→指先！E
             let dirX = screenTipX - screenBaseX;
             let dirY = screenTipY - screenBaseY;
             const len = Math.hypot(dirX, dirY) || 1;
             dirX /= len;
             dirY /= len;
 
-            // チE��チE��用の数字表示
+            // チE�E��E�チE�E��E�用の数字表示
             ctx.font = "32px sans-serif";
             ctx.fillStyle = "rgba(255,255,255,0.95)";
             ctx.strokeStyle = "rgba(0,0,0,0.7)";
@@ -336,7 +357,7 @@
             ctx.strokeText(count, screenBaseX + 20, screenBaseY - 24);
             ctx.fillText(count, screenBaseX + 20, screenBaseY - 24);
 
-            // 位置マ�Eカー
+            // 位置マ�Eカー
             ctx.beginPath();
             ctx.arc(screenBaseX, screenBaseY, 6, 0, Math.PI * 2);
             ctx.fillStyle = "rgba(0,255,255,0.8)";
@@ -351,7 +372,7 @@
               !states.ring &&
               !states.pinky;
 
-            // �p�[ �� �V�[���h����
+            // �E�p�E�[ �E��E� �E�V�E�[�E��E��E�h�E��E��E��E�
             if (isOpenHand) {
               seenHands.add(handKey);
               const prev = openCounters.get(handKey) || 0;
@@ -365,7 +386,7 @@
               releaseShield(handKey);
             }
 
-            // �w�{���Œe�����������i�����t���j
+            // �E�w�E�{�E��E��E�Œe�E��E��E��E��E��E��E��E��E��E��E�i�E��E��E��E��E�t�E��E��E�j
             if (count === 0) {
               spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, waterSprite, NINE_FRAME_COUNT);
             } else if (count === 1) {
@@ -378,7 +399,7 @@
 
           }
 
-          // パ�Eをやめた手�Eシールド�Eフェードアウトへ
+          // パ�Eをやめた手�Eシールド�Eフェードアウトへ
           for (const key of shields.keys()) {
             if (!seenHands.has(key)) {
               releaseShield(key);
@@ -386,7 +407,7 @@
             }
           }
         } else {
-          // 手が全く検�EされなぁE��レームで残留バリアをクリア
+          // 手が全く検�EされなぁE�E��E�レームで残留バリアをクリア
           shields.clear();
           openCounters.clear();
         }
@@ -395,7 +416,3 @@
   </script>
 </body>
 </html>
-
-
-
-
