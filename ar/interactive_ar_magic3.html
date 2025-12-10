@@ -92,9 +92,9 @@
       return img && img.complete && img.naturalWidth > 0;
     }
 
-    function resolveDir(handKey, dirX, dirY) {
+    function resolveDir(handKey, dirX, dirY, allowUpdate = true) {
       const len = Math.hypot(dirX, dirY);
-      if (len > 0.2) {
+      if (len > 0.2 && allowUpdate) {
         const nx = dirX / len;
         const ny = dirY / len;
         lastDirs.set(handKey, { x: nx, y: ny });
@@ -103,14 +103,14 @@
       return lastDirs.get(handKey) || { x: 0, y: -1 }; // ・ｽf・ｽt・ｽH・ｽ・ｽ・ｽg・ｽ・ｽ・ｽ・ｽ・ｽ
     }
 
-    function spawnProjectile(handKey, x, y, dirX, dirY, sprite, frameCount) {
+    function spawnProjectile(handKey, x, y, dirX, dirY, sprite, frameCount, allowUpdate = true) {
       if (!isSpriteReady(sprite)) return;
       const now = performance.now();
       const last = projectileCooldown[handKey] || 0;
       if (now - last < 120) return; // ・ｽA・ｽﾋゑｿｽ・ｽ・ｽ・ｽ・ｽ・ｽh・ｽ~
       projectileCooldown[handKey] = now;
 
-      const d = resolveDir(handKey, dirX, dirY);
+      const d = resolveDir(handKey, dirX, dirY, allowUpdate);
 
       projectiles.push({
         x: x + d.x * 30,
@@ -384,7 +384,7 @@
 
             // ・ｽE・ｽw・ｽE・ｽ{・ｽE・ｽ・ｽE・ｽ・ｽE・ｽﾅ弾・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽi・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽt・ｽE・ｽ・ｽE・ｽ・ｽE・ｽj
             if (count === 0) {
-              spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, waterSprite, NINE_FRAME_COUNT);
+              spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, waterSprite, NINE_FRAME_COUNT, false);
             } else if (count === 1) {
               spawnProjectile(handKey, screenBaseX, screenBaseY, dirX, dirY, thunderSprite, NINE_FRAME_COUNT);
             } else if (count === 3) {
