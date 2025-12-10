@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hand Bowling Game</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+    #game {
+      border: 2px solid #444;
+      background: #111;
+    }
+    #video {
+      display: none;
+    }
+    #info {
+      margin-top: 8px;
+      font-size: 14px;
+      opacity: 0.8;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="640" height="480"></canvas>
+  <video id="video" playsinline></video>
+  <div id="info">
+    ✋ 手を左右に動かしてボールを構える<br>
+    🤏 親指＋人差し指をつまむと投球 / 画面クリックでリセット
+  </div>
+
+  <!-- MediaPipe Hands & Camera Utils -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const video = document.getElementById("video");
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // ====== ゲーム状態 ======
+    const lane = {
+      x: W * 0.25,
+      width: W * 0.5
+    };
+
+    const ball = {
+      x: W / 2,
+      y: H - 60,
+      r: 16,
+      vy: 0,
+      state: "aim" // "aim" or "moving" or "finished"
+    };
+
+    const pins = [];
+    const pinR = 10;
+    let score = 0;
+
+    function initPins() {
+      pins.length = 0;
+      // ピン配置（三角形 1-2-3-4）
+      const baseY = 80;
+      const rowGap = 40;
+      const colGap = 30;
+      const centerX = W / 2;
+
+      let id = 0;
+      for (let row = 0; row < 4; row++) {
+        const y = baseY + row * rowGap;
+        const count = row + 1;
+        const totalWidth = (count - 1) * colGap;
+        for (let i = 0; i < count; i++) {
+          const x = centerX - totalWidth / 2 + i * colGap;
+          pins.push({ id: id++, x, y, hit: false });
+        }
+      }
+    }
+
+    initPins();
+
+    // ====== 手の認識 ======
+    const hands = new Hands({
+      locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+      }
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+
+    hands.onResults(onResults);
+
+    let lastHandX = null;
+    let pinchPrev = false;
+
+    const camera = new Camera(video, {
+      onFrame: async () => {
+        await hands.send({ image: video });
+      },
+      width: 640,
+      height: 480
+    });
+    camera.start();
+
+    function onResults(results) {
+      if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+        // 手が見えないときは何もしない
+        return;
+      }
+      const lm = results.multiHandLandmarks[0];
+
+      // 人差し指先端(8)で左右位置を決める
+      const indexTip = lm[8];
+      const normX = 1 - indexTip.x; // ミラー
+      lastHandX = lane.x + normX * lane.width; // レーン内にマップ
+
+      // 親指と人差し指の距離でピンチ検出
+      const thumbTip = lm[4];
+      const dx = indexTip.x - thumbTip.x;
+      const dy = indexTip.y - thumbTip.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const pinchNow = dist < 0.05; // 閾値ざっくり
+
+      if (!pinchPrev && pinchNow) {
+        // ピンチ開始時に投球
+        throwBall();
+      }
+      pinchPrev = pinchNow;
+    }
+
+    function throwBall() {
+      if (ball.state !== "aim") return;
+      ball.state = "moving";
+      ball.vy = -10; // 上に進む
+    }
+
+    // ====== ロジック ======
+    function resetGame() {
+      ball.x = W / 2;
+      ball.y = H - 60;
+      ball.vy = 0;
+      ball.state = "aim";
+      score = 0;
+      initPins();
+    }
+
+    function update() {
+      // 構え中：手のx位置に追従
+      if (ball.state === "aim") {
+        if (lastHandX != null) {
+          // レーンの中にクランプ
+          const minX = lane.x + ball.r;
+          const maxX = lane.x + lane.width - ball.r;
+          ball.x = Math.min(Math.max(lastHandX, minX), maxX);
+        }
+      }
+
+      // 投球中
+      if (ball.state === "moving") {
+        ball.y += ball.vy;
+
+        // pinsとの当たり判定
+        pins.forEach((p) => {
+          if (p.hit) return;
+          const dx = ball.x - p.x;
+          const dy = ball.y - p.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < ball.r + pinR) {
+            p.hit = true;
+            score++;
+          }
+        });
+
+        // 少し減速（摩擦イメージ）
+        ball.vy *= 0.99;
+
+        // 画面上部を超えたら終了
+        if (ball.y + ball.r < 0) {
+          ball.state = "finished";
+        }
+      }
+    }
+
+    // ====== 描画 ======
+    function drawLane() {
+      ctx.fillStyle = "#222";
+      ctx.fillRect(lane.x, 0, lane.width, H);
+
+      // レーンの線
+      ctx.strokeStyle = "#555";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(lane.x, 0);
+      ctx.lineTo(lane.x, H);
+      ctx.moveTo(lane.x + lane.width, 0);
+      ctx.lineTo(lane.x + lane.width, H);
+      ctx.stroke();
+    }
+
+    function drawPins() {
+      pins.forEach((p) => {
+        if (p.hit) return;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, pinR, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.strokeStyle = "#ccc";
+        ctx.stroke();
+      });
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = "#0ff";
+      ctx.fill();
+      ctx.strokeStyle = "#0aa";
+      ctx.stroke();
+    }
+
+    function drawUI() {
+      ctx.fillStyle = "#fff";
+      ctx.font = "16px system-ui";
+      ctx.fillText(`Score: ${score}`, 16, 24);
+
+      if (ball.state === "aim") {
+        ctx.fillText("手を左右に動かして狙いを定める / ピンチで投球", 16, 48);
+      } else if (ball.state === "finished") {
+        ctx.font = "24px system-ui";
+        ctx.fillStyle = "#ff5";
+        ctx.fillText("投球終了！ 画面クリックでリセット", 80, H / 2);
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, W, H);
+
+      drawLane();
+      drawPins();
+      drawBall();
+      drawUI();
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+
+    // クリックでリセット
+    canvas.addEventListener("click", () => {
+      if (ball.state === "finished") {
+        resetGame();
+      }
+    });
+  </script>
+</body>
+</html>
