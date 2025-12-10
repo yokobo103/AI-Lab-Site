@@ -124,7 +124,7 @@
       });
     }
 
-        function drawProjectiles(ctx) {
+        function drawProjectiles(ctx, shields) {
       ctx.save();
 
       for (let i = projectiles.length - 1; i >= 0; i--) {
@@ -142,6 +142,22 @@
         p.y += p.vy;
         p.life--;
         p.frame = (p.frame + 1) % p.frameCount;
+
+        // ?????????
+        let blocked = false;
+        for (const [key, s] of shields) {
+          const dx = p.x - s.x;
+          const dy = p.y - s.y;
+          if (dx * dx + dy * dy <= BARRIER_RADIUS * BARRIER_RADIUS) {
+            s.flash = FLASH_MAX;   // ???????
+            blocked = true;
+            break;
+          }
+        }
+        if (blocked) {
+          projectiles.splice(i, 1);
+          continue;
+        }
 
         const frameW = p.sprite.width / p.frameCount;
         const frameH = p.sprite.height;
@@ -177,15 +193,18 @@
     const BARRIER_FRAME_COUNT = 9;
     const BARRIER_FRAME_MS = 70; // 1コマあたり紁E0ms
     const BARRIER_SIZE = 320;
+    const BARRIER_RADIUS = BARRIER_SIZE * 0.45; // ?????
+    const FLASH_DECAY = 0.08;       // ????????
+    const FLASH_MAX = 0.6;          // ??????????
 
-    // handKey -> { x, y, phase, frame, last, hold }
+    // handKey -> { x, y, phase, frame, last, hold, flash }
     // phase: "opening" | "holding"
     const shields = new Map();
 
     function ensureShield(handKey, x, y, t) {
       let s = shields.get(handKey);
       if (!s) {
-        s = { x, y, phase: "opening", frame: 0, last: t, hold: true };
+        s = { x, y, phase: "opening", frame: 0, last: t, hold: true, flash: 0 };
         shields.set(handKey, s);
         return;
       }
@@ -223,6 +242,7 @@
 
     function drawShields(ctx, t) {
       for (const [key, s] of shields) {
+        if (s.flash === undefined) s.flash = 0;
         const step = Math.floor((t - s.last) / BARRIER_FRAME_MS);
         if (step > 0) {
           s.last = t;
@@ -248,6 +268,22 @@
         }
 
         drawBarrierFrame(ctx, sprite, frameIdx, s.x, s.y);
+
+        // ????????????
+        if (s.flash > 0) {
+          ctx.save();
+          ctx.globalCompositeOperation = "screen";
+          ctx.globalAlpha = s.flash;
+          const g = ctx.createRadialGradient(s.x, s.y, BARRIER_SIZE * 0.1, s.x, s.y, BARRIER_SIZE * 0.55);
+          g.addColorStop(0, "rgba(180, 240, 255, 0.9)");
+          g.addColorStop(1, "rgba(0, 160, 255, 0)");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, BARRIER_SIZE * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          s.flash = Math.max(0, s.flash - FLASH_DECAY);
+        }
       }
     }
 
@@ -312,7 +348,7 @@
         ctx.restore();
 
         // 2. エフェクト描画
-        drawProjectiles(ctx);
+        drawProjectiles(ctx, shields);
         drawShields(ctx, t);
 
         // 3. 手検�E結果を�E琁E
