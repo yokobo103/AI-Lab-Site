@@ -145,11 +145,17 @@
 
         // ?????????
         let blocked = false;
+        let ringColor = "rgba(120, 200, 255, 0.55)";
+        if (p.sprite === fireSprite) ringColor = "rgba(255, 150, 60, 0.60)";
+        else if (p.sprite === waterSprite) ringColor = "rgba(80, 180, 255, 0.60)";
+        else if (p.sprite === thunderSprite) ringColor = "rgba(200, 220, 255, 0.65)";
+        else if (p.sprite === toxicSprite) ringColor = "rgba(180, 255, 120, 0.55)";
         for (const [key, s] of shields) {
           const dx = p.x - s.x;
           const dy = p.y - s.y;
           if (dx * dx + dy * dy <= BARRIER_RADIUS * BARRIER_RADIUS) {
             s.flash = FLASH_MAX;   // ???????
+            spawnShockRing(s.x, s.y, ringColor);
             blocked = true;
             break;
           }
@@ -224,7 +230,7 @@
       shields.delete(handKey);
     }
 
-    function drawBarrierFrame(ctx, img, frameIndex, cx, cy) {
+    function drawBarrierFrame(ctx, img, frameIndex, cx, cy, alpha = 0.9) {
       if (!img.complete || img.naturalWidth === 0) return;
       const frameW = img.width / BARRIER_FRAME_COUNT;
       const frameH = img.height;
@@ -234,10 +240,34 @@
       const x = cx - size / 2;
       const y = cy - size / 2;
       ctx.save();
-      ctx.globalAlpha = 0.9;
+      ctx.globalAlpha = alpha;
       ctx.globalCompositeOperation = "screen";
       ctx.drawImage(img, sx, sy, frameW, frameH, x, y, size, size);
       ctx.restore();
+    }
+
+    function spawnShockRing(x, y, color) {
+      shockRings.push({ x, y, life: 0, max: 14, color });
+    }
+
+    function drawShockRings(ctx) {
+      for (let i = shockRings.length - 1; i >= 0; i--) {
+        const r = shockRings[i];
+        const t = r.life / r.max;
+        const radius = BARRIER_SIZE * (0.30 + 0.28 * t);
+        const alpha = 0.45 * (1 - t);
+        const lineW = 10 * (1 - t) + 2;
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.lineWidth = lineW;
+        ctx.strokeStyle = r.color.replace(/,\s*0\.?[0-9]*\)$/g, ", " + alpha.toFixed(3) + ")");
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        r.life++;
+        if (r.life >= r.max) shockRings.splice(i, 1);
+      }
     }
 
     function drawShields(ctx, t) {
@@ -257,17 +287,33 @@
           }
         }
 
-        let sprite, frameIdx;
+        let sprite, frameIdx, alpha;
         if (s.phase === "opening") {
           sprite = barrierOpenSprite;
           frameIdx = s.frame;
+          alpha = BARRIER_ALPHA_OPEN;
         }
         else { // holding
           sprite = barrierLoopSprite;
           frameIdx = s.frame;
+          alpha = BARRIER_ALPHA_HOLD;
         }
 
-        drawBarrierFrame(ctx, sprite, frameIdx, s.x, s.y);
+        drawBarrierFrame(ctx, sprite, frameIdx, s.x, s.y, alpha);
+
+        // ????????????
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.globalAlpha = BARRIER_GLOW_ALPHA * (s.phase === "opening" ? 1 : 0.8);
+        const glowR = BARRIER_SIZE * BARRIER_GLOW_SCALE * 0.5;
+        const g2 = ctx.createRadialGradient(s.x, s.y, BARRIER_SIZE * 0.25, s.x, s.y, glowR);
+        g2.addColorStop(0, "rgba(160, 220, 255, 0.8)");
+        g2.addColorStop(1, "rgba(0, 120, 255, 0)");
+        ctx.fillStyle = g2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, glowR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
         // ????????????
         if (s.flash > 0) {
@@ -350,6 +396,7 @@
         // 2. エフェクト描画
         drawProjectiles(ctx, shields);
         drawShields(ctx, t);
+        drawShockRings(ctx);
 
         // 3. 手検�E結果を�E琁E
         if (results.multiHandLandmarks && results.multiHandLandmarks.length) {
