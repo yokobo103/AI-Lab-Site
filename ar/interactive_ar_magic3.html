@@ -121,6 +121,7 @@
         life: PROJECTILE_LIFE,
         sprite,
         frameCount,
+        bounced: false,
       });
     }
 
@@ -156,7 +157,16 @@
           if (dx * dx + dy * dy <= BARRIER_RADIUS * BARRIER_RADIUS) {
             s.flash = FLASH_MAX;   // ???????
             spawnShockRing(s.x, s.y, ringColor);
-            blocked = true;
+            if (!p.bounced) {
+              p.bounced = true;
+              p.x -= p.vx * 0.3;
+              p.y -= p.vy * 0.3;
+              p.vx *= -0.4;
+              p.vy *= -0.4;
+              p.life = Math.min(p.life, 12);
+            } else {
+              blocked = true;
+            }
             break;
           }
         }
@@ -210,13 +220,14 @@
     function ensureShield(handKey, x, y, t) {
       let s = shields.get(handKey);
       if (!s) {
-        s = { x, y, phase: "opening", frame: 0, last: t, hold: true, flash: 0 };
+        s = { x, y, phase: "opening", frame: 0, last: t, hold: true, flash: 0, expireAt: t + SHIELD_GRACE_MS };
         shields.set(handKey, s);
         return;
       }
       s.x = x;
       s.y = y;
       s.hold = true;
+      s.expireAt = t + SHIELD_GRACE_MS;
       // 髢峨§騾比ｸｭ縺ｧ蜀榊ｺｦ繝托ｿｽE縺ｫ縺ｪ縺｣縺溷ｴ蜷茨ｿｽE髢九″縺ｸ謌ｻ縺・
       if (s.phase === "closing") {
         s.phase = "opening";
@@ -462,7 +473,11 @@
               }
             } else {
               openCounters.set(handKey, 0);
-              releaseShield(handKey);
+              const sh = shields.get(handKey);
+              if (sh) {
+                sh.hold = false;
+                sh.expireAt = Math.max(sh.expireAt || 0, t + SHIELD_GRACE_MS);
+              }
             }
 
             // ・ｽE・ｽw・ｽE・ｽ{・ｽE・ｽ・ｽE・ｽ・ｽE・ｽﾅ弾・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽi・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽt・ｽE・ｽ・ｽE・ｽ・ｽE・ｽj
@@ -479,15 +494,30 @@
           }
 
           // 繝托ｿｽE繧偵ｄ繧√◆謇具ｿｽE繧ｷ繝ｼ繝ｫ繝会ｿｽE繝輔ぉ繝ｼ繝峨い繧ｦ繝医∈
-          for (const key of shields.keys()) {
+          for (const [key, sh] of shields) {
             if (!seenHands.has(key)) {
-              releaseShield(key);
+              sh.hold = false;
+              sh.expireAt = Math.max(sh.expireAt || 0, t + SHIELD_GRACE_MS);
+            }
+          }
+          for (const [key, sh] of Array.from(shields)) {
+            if (!sh.hold && t > (sh.expireAt || 0)) {
+              shields.delete(key);
               openCounters.delete(key);
             }
           }
         } else {
           // 謇九′蜈ｨ縺乗､懶ｿｽE縺輔ｌ縺ｪ縺・・ｽE・ｽ・ｽE・ｽ繝ｬ繝ｼ繝縺ｧ谿狗蕗繝舌Μ繧｢繧偵け繝ｪ繧｢
-          shields.clear();
+          const nowExp = t + SHIELD_GRACE_MS;
+          for (const sh of shields.values()) {
+            sh.hold = false;
+            sh.expireAt = Math.max(sh.expireAt || 0, nowExp);
+          }
+          for (const [key, sh] of Array.from(shields)) {
+            if (!sh.hold && t > (sh.expireAt || 0)) {
+              shields.delete(key);
+            }
+          }
           openCounters.clear();
         }
       }
