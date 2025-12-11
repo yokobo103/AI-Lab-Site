@@ -87,6 +87,7 @@
 
     const PROJECTILE_SPEED = 18;
     const PROJECTILE_LIFE = 60;
+const SHIELD_GRACE_MS = 500; // ??????????
 
     function isSpriteReady(img) {
       return img && img.complete && img.naturalWidth > 0;
@@ -121,6 +122,7 @@
         life: PROJECTILE_LIFE,
         sprite,
         frameCount,
+        bounced: false,
       });
     }
 
@@ -145,12 +147,27 @@
 
         // ?????????
         let blocked = false;
+        let ringColor = "rgba(120, 200, 255, 0.55)";
+        if (p.sprite === fireSprite) ringColor = "rgba(255, 150, 60, 0.60)";
+        else if (p.sprite === waterSprite) ringColor = "rgba(80, 180, 255, 0.60)";
+        else if (p.sprite === thunderSprite) ringColor = "rgba(200, 220, 255, 0.65)";
+        else if (p.sprite === toxicSprite) ringColor = "rgba(180, 255, 120, 0.55)";
         for (const [key, s] of shields) {
           const dx = p.x - s.x;
           const dy = p.y - s.y;
           if (dx * dx + dy * dy <= BARRIER_RADIUS * BARRIER_RADIUS) {
             s.flash = FLASH_MAX;   // ???????
-            blocked = true;
+            spawnShockRing(s.x, s.y, ringColor);
+            if (!p.bounced) {
+              p.bounced = true;
+              p.x -= p.vx * 0.3;
+              p.y -= p.vy * 0.3;
+              p.vx *= -0.4;
+              p.vy *= -0.4;
+              p.life = Math.min(p.life, 12);
+            } else {
+              blocked = true;
+            }
             break;
           }
         }
@@ -204,13 +221,14 @@
     function ensureShield(handKey, x, y, t) {
       let s = shields.get(handKey);
       if (!s) {
-        s = { x, y, phase: "opening", frame: 0, last: t, hold: true, flash: 0 };
+        s = { x, y, phase: "opening", frame: 0, last: t, hold: true, flash: 0, expireAt: t + SHIELD_GRACE_MS };
         shields.set(handKey, s);
         return;
       }
       s.x = x;
       s.y = y;
       s.hold = true;
+      s.expireAt = t + SHIELD_GRACE_MS;
       // 髢峨§騾比ｸｭ縺ｧ蜀榊ｺｦ繝托ｿｽE縺ｫ縺ｪ縺｣縺溷ｴ蜷茨ｿｽE髢九″縺ｸ謌ｻ縺・
       if (s.phase === "closing") {
         s.phase = "opening";
@@ -224,7 +242,7 @@
       shields.delete(handKey);
     }
 
-    function drawBarrierFrame(ctx, img, frameIndex, cx, cy) {
+    function drawBarrierFrame(ctx, img, frameIndex, cx, cy, alpha = 0.9) {
       if (!img.complete || img.naturalWidth === 0) return;
       const frameW = img.width / BARRIER_FRAME_COUNT;
       const frameH = img.height;
@@ -234,10 +252,34 @@
       const x = cx - size / 2;
       const y = cy - size / 2;
       ctx.save();
-      ctx.globalAlpha = 0.9;
+      ctx.globalAlpha = alpha;
       ctx.globalCompositeOperation = "screen";
       ctx.drawImage(img, sx, sy, frameW, frameH, x, y, size, size);
       ctx.restore();
+    }
+
+    function spawnShockRing(x, y, color) {
+      shockRings.push({ x, y, life: 0, max: 14, color });
+    }
+
+    function drawShockRings(ctx) {
+      for (let i = shockRings.length - 1; i >= 0; i--) {
+        const r = shockRings[i];
+        const t = r.life / r.max;
+        const radius = BARRIER_SIZE * (0.30 + 0.28 * t);
+        const alpha = 0.45 * (1 - t);
+        const lineW = 10 * (1 - t) + 2;
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.lineWidth = lineW;
+        ctx.strokeStyle = r.color.replace(/,\s*0\.?[0-9]*\)$/g, ", " + alpha.toFixed(3) + ")");
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        r.life++;
+        if (r.life >= r.max) shockRings.splice(i, 1);
+      }
     }
 
     function drawShields(ctx, t) {
@@ -257,17 +299,33 @@
           }
         }
 
-        let sprite, frameIdx;
+        let sprite, frameIdx, alpha;
         if (s.phase === "opening") {
           sprite = barrierOpenSprite;
           frameIdx = s.frame;
+          alpha = BARRIER_ALPHA_OPEN;
         }
         else { // holding
           sprite = barrierLoopSprite;
           frameIdx = s.frame;
+          alpha = BARRIER_ALPHA_HOLD;
         }
 
-        drawBarrierFrame(ctx, sprite, frameIdx, s.x, s.y);
+        drawBarrierFrame(ctx, sprite, frameIdx, s.x, s.y, alpha);
+
+        // ????????????
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.globalAlpha = BARRIER_GLOW_ALPHA * (s.phase === "opening" ? 1 : 0.8);
+        const glowR = BARRIER_SIZE * BARRIER_GLOW_SCALE * 0.5;
+        const g2 = ctx.createRadialGradient(s.x, s.y, BARRIER_SIZE * 0.25, s.x, s.y, glowR);
+        g2.addColorStop(0, "rgba(160, 220, 255, 0.8)");
+        g2.addColorStop(1, "rgba(0, 120, 255, 0)");
+        ctx.fillStyle = g2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, glowR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
         // ????????????
         if (s.flash > 0) {
@@ -350,6 +408,7 @@
         // 2. 繧ｨ繝輔ぉ繧ｯ繝域緒逕ｻ
         drawProjectiles(ctx, shields);
         drawShields(ctx, t);
+        drawShockRings(ctx);
 
         // 3. 謇区､懶ｿｽE邨先棡繧抵ｿｽE逅・
         if (results.multiHandLandmarks && results.multiHandLandmarks.length) {
@@ -415,7 +474,11 @@
               }
             } else {
               openCounters.set(handKey, 0);
-              releaseShield(handKey);
+              const sh = shields.get(handKey);
+              if (sh) {
+                sh.hold = false;
+                sh.expireAt = Math.max(sh.expireAt || 0, t + SHIELD_GRACE_MS);
+              }
             }
 
             // ・ｽE・ｽw・ｽE・ｽ{・ｽE・ｽ・ｽE・ｽ・ｽE・ｽﾅ弾・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽi・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽ・ｽE・ｽt・ｽE・ｽ・ｽE・ｽ・ｽE・ｽj
@@ -432,15 +495,30 @@
           }
 
           // 繝托ｿｽE繧偵ｄ繧√◆謇具ｿｽE繧ｷ繝ｼ繝ｫ繝会ｿｽE繝輔ぉ繝ｼ繝峨い繧ｦ繝医∈
-          for (const key of shields.keys()) {
+          for (const [key, sh] of shields) {
             if (!seenHands.has(key)) {
-              releaseShield(key);
+              sh.hold = false;
+              sh.expireAt = Math.max(sh.expireAt || 0, t + SHIELD_GRACE_MS);
+            }
+          }
+          for (const [key, sh] of Array.from(shields)) {
+            if (!sh.hold && t > (sh.expireAt || 0)) {
+              shields.delete(key);
               openCounters.delete(key);
             }
           }
         } else {
           // 謇九′蜈ｨ縺乗､懶ｿｽE縺輔ｌ縺ｪ縺・・ｽE・ｽ・ｽE・ｽ繝ｬ繝ｼ繝縺ｧ谿狗蕗繝舌Μ繧｢繧偵け繝ｪ繧｢
-          shields.clear();
+          const nowExp = t + SHIELD_GRACE_MS;
+          for (const sh of shields.values()) {
+            sh.hold = false;
+            sh.expireAt = Math.max(sh.expireAt || 0, nowExp);
+          }
+          for (const [key, sh] of Array.from(shields)) {
+            if (!sh.hold && t > (sh.expireAt || 0)) {
+              shields.delete(key);
+            }
+          }
           openCounters.clear();
         }
       }
