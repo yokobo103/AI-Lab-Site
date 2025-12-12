@@ -1,0 +1,91 @@
+poseLandmarker.detectForVideo(video, nowInMs, (result) => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  // 自撮りの向きに合わせて反転
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+
+  const landmarksArray = result.landmarks;
+  const L = PoseLandmarker; // 短縮しただけ
+
+  for (const lm of landmarksArray) {
+    // --- 描画スタイル ---
+    const LINE_WIDTH = 10;     // ★ 太さを増やす
+    const JOINT_SIZE = 8;      // ★ 関節サイズ
+    const COLOR = "#00ffe0";   // ★ 好きな色に変更可能
+
+    ctx.lineWidth = LINE_WIDTH;
+    ctx.strokeStyle = COLOR;
+    ctx.fillStyle = COLOR;
+
+    // ★ 関節を描く
+    function joint(i) {
+      const p = lm[i];
+      ctx.beginPath();
+      ctx.arc(p.x * canvas.width, p.y * canvas.height, JOINT_SIZE, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ★ 点と点を太線でつなぐ
+    function bone(a, b) {
+      const p1 = lm[a];
+      const p2 = lm[b];
+      ctx.beginPath();
+      ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
+      ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
+      ctx.stroke();
+    }
+
+    // --- 必要なランドマークの番号 ---
+    const NOSE = 0;
+    const L_SH = 11, R_SH = 12;
+    const L_EL = 13, R_EL = 14;
+    const L_WR = 15, R_WR = 16;
+    const L_HIP = 23, R_HIP = 24;
+    const L_KNEE = 25, R_KNEE = 26;
+    const L_ANK = 27, R_ANK = 28;
+
+    // --- 骨格ライン（カスタム） ---
+    // 肩
+    bone(L_SH, R_SH);
+
+    // 腕
+    bone(L_SH, L_EL);
+    bone(L_EL, L_WR);
+    bone(R_SH, R_EL);
+    bone(R_EL, R_WR);
+
+    // 体幹
+    bone(L_SH, L_HIP);
+    bone(R_SH, R_HIP);
+    bone(L_HIP, R_HIP);
+
+    // 脚
+    bone(L_HIP, L_KNEE);
+    bone(L_KNEE, L_ANK);
+    bone(R_HIP, R_KNEE);
+    bone(R_KNEE, R_ANK);
+
+    // --- 関節描画 ---
+    [
+      NOSE,
+      L_SH, R_SH,
+      L_EL, R_EL,
+      L_WR, R_WR,
+      L_HIP, R_HIP,
+      L_KNEE, R_KNEE,
+      L_ANK, R_ANK
+    ].forEach(joint);
+
+    // --- 頭（円）も描いてみるとアバター感UP ---
+    const head = lm[NOSE];
+    const headX = head.x * canvas.width;
+    const headY = head.y * canvas.height - 40; // 少し上にずらして頭ぽく
+    ctx.beginPath();
+    ctx.arc(headX, headY, 35, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+});
