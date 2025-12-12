@@ -1,91 +1,282 @@
-poseLandmarker.detectForVideo(video, nowInMs, (result) => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.save();
-  // 自撮りの向きに合わせて反転
-  ctx.translate(canvas.width, 0);
-  ctx.scale(-1, 1);
-
-  const landmarksArray = result.landmarks;
-  const L = PoseLandmarker; // 短縮しただけ
-
-  for (const lm of landmarksArray) {
-    // --- 描画スタイル ---
-    const LINE_WIDTH = 10;     // ★ 太さを増やす
-    const JOINT_SIZE = 8;      // ★ 関節サイズ
-    const COLOR = "#00ffe0";   // ★ 好きな色に変更可能
-
-    ctx.lineWidth = LINE_WIDTH;
-    ctx.strokeStyle = COLOR;
-    ctx.fillStyle = COLOR;
-
-    // ★ 関節を描く
-    function joint(i) {
-      const p = lm[i];
-      ctx.beginPath();
-      ctx.arc(p.x * canvas.width, p.y * canvas.height, JOINT_SIZE, 0, Math.PI * 2);
-      ctx.fill();
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>MediaPipe Pose 棒人間デモ</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 16px;
+      box-sizing: border-box;
     }
 
-    // ★ 点と点を太線でつなぐ
-    function bone(a, b) {
-      const p1 = lm[a];
-      const p2 = lm[b];
-      ctx.beginPath();
-      ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
-      ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
-      ctx.stroke();
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
     }
 
-    // --- 必要なランドマークの番号 ---
-    const NOSE = 0;
-    const L_SH = 11, R_SH = 12;
-    const L_EL = 13, R_EL = 14;
-    const L_WR = 15, R_WR = 16;
-    const L_HIP = 23, R_HIP = 24;
-    const L_KNEE = 25, R_KNEE = 26;
-    const L_ANK = 27, R_ANK = 28;
+    #container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+    }
 
-    // --- 骨格ライン（カスタム） ---
-    // 肩
-    bone(L_SH, R_SH);
+    video,
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 640px;
+      height: 480px;
+      /* 自撮りっぽく左右反転 */
+      transform: scaleX(-1);
+    }
 
-    // 腕
-    bone(L_SH, L_EL);
-    bone(L_EL, L_WR);
-    bone(R_SH, R_EL);
-    bone(R_EL, R_WR);
+    video {
+      opacity: 0.25; /* 背景としてうっすら見える程度（棒人間を目立たせる） */
+    }
 
-    // 体幹
-    bone(L_SH, L_HIP);
-    bone(R_SH, R_HIP);
-    bone(L_HIP, R_HIP);
+    #status {
+      margin-top: 8px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
 
-    // 脚
-    bone(L_HIP, L_KNEE);
-    bone(L_KNEE, L_ANK);
-    bone(R_HIP, R_KNEE);
-    bone(R_KNEE, R_ANK);
+    button {
+      margin-top: 8px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: none;
+      background: #2d8cff;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
 
-    // --- 関節描画 ---
-    [
-      NOSE,
-      L_SH, R_SH,
-      L_EL, R_EL,
-      L_WR, R_WR,
-      L_HIP, R_HIP,
-      L_KNEE, R_KNEE,
-      L_ANK, R_ANK
-    ].forEach(joint);
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <h1>MediaPipe Pose で棒人間アバター</h1>
+  <div id="container">
+    <video id="webcam" autoplay playsinline></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+  </div>
+  <button id="startButton">Webカメラ開始</button>
+  <div id="status">モデル読み込み中…</div>
 
-    // --- 頭（円）も描いてみるとアバター感UP ---
-    const head = lm[NOSE];
-    const headX = head.x * canvas.width;
-    const headY = head.y * canvas.height - 40; // 少し上にずらして頭ぽく
-    ctx.beginPath();
-    ctx.arc(headX, headY, 35, 0, Math.PI * 2);
-    ctx.stroke();
-  }
+  <!-- ここからスクリプト。type="module" でESM importを使う -->
+  <script type="module">
+    import {
+      PoseLandmarker,
+      FilesetResolver,
+      DrawingUtils,
+    } from "https://cdn.skypack.dev/@mediapipe/tasks-vision@0.10.0";
 
-  ctx.restore();
-});
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const statusEl = document.getElementById("status");
+    const startButton = document.getElementById("startButton");
+
+    let poseLandmarker = null;
+    let runningMode = "VIDEO";
+    let lastVideoTime = -1;
+    let webcamRunning = false;
+
+    // 棒人間を描くための DrawingUtils インスタンス
+    const drawingUtils = new DrawingUtils(ctx);
+
+    // 1) PoseLandmarker の初期化
+    async function initPoseLandmarker() {
+      statusEl.textContent = "モデル読み込み中…";
+
+      // WASMファイルの場所を指定してFilesetResolverを作成
+      // 公式ガイド推奨のCDNルートを使用
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+      );
+
+      // 軽量版モデル（lite）をGoogleのストレージから直接読み込む
+      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+          delegate: "GPU",
+        },
+        runningMode, // "VIDEO"
+        numPoses: 1,
+      });
+
+      statusEl.textContent = "モデル準備完了。Webカメラを開始してください。";
+      startButton.disabled = false;
+    }
+
+    // 2) Webカメラを開始
+    async function startWebcam() {
+      if (!poseLandmarker) {
+        statusEl.textContent = "モデルがまだ読み込み中です…";
+        return;
+      }
+
+      if (webcamRunning) {
+        // 停止ロジックを入れたければここに書く（今回は簡略化）
+        return;
+      }
+
+      webcamRunning = true;
+      startButton.disabled = true;
+      statusEl.textContent = "Webカメラ起動中…";
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 },
+        audio: false,
+      });
+
+      video.srcObject = stream;
+
+      video.addEventListener(
+        "loadeddata",
+        () => {
+          statusEl.textContent = "ポーズ推定中…動いてみてください。";
+          requestAnimationFrame(predictWebcam);
+        },
+        { once: true }
+      );
+    }
+
+    // 3) 毎フレームごとにポーズ推定＋棒人間描画
+    async function predictWebcam() {
+      if (!webcamRunning) return;
+      if (!poseLandmarker) {
+        requestAnimationFrame(predictWebcam);
+        return;
+      }
+
+      const nowInMs = performance.now();
+
+      // 不要な重複処理を減らすため、前フレームと時間が同じならスキップ
+      if (video.currentTime === lastVideoTime) {
+        requestAnimationFrame(predictWebcam);
+        return;
+      }
+      lastVideoTime = video.currentTime;
+
+        poseLandmarker.detectForVideo(video, nowInMs, (result) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        // 自撮りの向きに合わせて反転
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+
+        const landmarksArray = result.landmarks;
+        const L = PoseLandmarker; // 短縮しただけ
+
+        for (const lm of landmarksArray) {
+            // --- 描画スタイル ---
+            const LINE_WIDTH = 10;     // ★ 太さを増やす
+            const JOINT_SIZE = 8;      // ★ 関節サイズ
+            const COLOR = "#00ffe0";   // ★ 好きな色に変更可能
+
+            ctx.lineWidth = LINE_WIDTH;
+            ctx.strokeStyle = COLOR;
+            ctx.fillStyle = COLOR;
+
+            // ★ 関節を描く
+            function joint(i) {
+            const p = lm[i];
+            ctx.beginPath();
+            ctx.arc(p.x * canvas.width, p.y * canvas.height, JOINT_SIZE, 0, Math.PI * 2);
+            ctx.fill();
+            }
+
+            // ★ 点と点を太線でつなぐ
+            function bone(a, b) {
+            const p1 = lm[a];
+            const p2 = lm[b];
+            ctx.beginPath();
+            ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
+            ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
+            ctx.stroke();
+            }
+
+            // --- 必要なランドマークの番号 ---
+            const NOSE = 0;
+            const L_SH = 11, R_SH = 12;
+            const L_EL = 13, R_EL = 14;
+            const L_WR = 15, R_WR = 16;
+            const L_HIP = 23, R_HIP = 24;
+            const L_KNEE = 25, R_KNEE = 26;
+            const L_ANK = 27, R_ANK = 28;
+
+            // --- 骨格ライン（カスタム） ---
+            // 肩
+            bone(L_SH, R_SH);
+
+            // 腕
+            bone(L_SH, L_EL);
+            bone(L_EL, L_WR);
+            bone(R_SH, R_EL);
+            bone(R_EL, R_WR);
+
+            // 体幹
+            bone(L_SH, L_HIP);
+            bone(R_SH, R_HIP);
+            bone(L_HIP, R_HIP);
+
+            // 脚
+            bone(L_HIP, L_KNEE);
+            bone(L_KNEE, L_ANK);
+            bone(R_HIP, R_KNEE);
+            bone(R_KNEE, R_ANK);
+
+            // --- 関節描画 ---
+            [
+            NOSE,
+            L_SH, R_SH,
+            L_EL, R_EL,
+            L_WR, R_WR,
+            L_HIP, R_HIP,
+            L_KNEE, R_KNEE,
+            L_ANK, R_ANK
+            ].forEach(joint);
+
+            // --- 頭（円）も描いてみるとアバター感UP ---
+            const head = lm[NOSE];
+            const headX = head.x * canvas.width;
+            const headY = head.y * canvas.height - 40; // 少し上にずらして頭ぽく
+            ctx.beginPath();
+            ctx.arc(headX, headY, 35, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+        });
+
+
+      requestAnimationFrame(predictWebcam);
+    }
+
+    // ボタンイベント設定
+    startButton.addEventListener("click", startWebcam);
+
+    // ページ読み込み時にモデル初期化を開始
+    initPoseLandmarker().catch((err) => {
+      console.error(err);
+      statusEl.textContent = "モデルの読み込みに失敗しました。";
+    });
+  </script>
+</body>
+</html>
