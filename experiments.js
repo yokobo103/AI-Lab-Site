@@ -5,6 +5,21 @@
 
 const experiments = [
   {
+    "id": "exp-010",
+    "title": "偉大なる闇の魔法使いになるんだ！",
+    "date": "2025-12-12",
+    "tags": [
+      "インタラクティブAR",
+      "画像認識"
+    ],
+    "image": "posts/web_images/exp-010-b630a2da.webp",
+    "summary": "名前を言ってはいけないよこぼ",
+    "detail": {
+      "content": "<br>\n\n## これは何の実験？\n<br>\n前回の魔法インタラクティブARを改良しました。<br>\n<br>\n<br>\n≪改良ポイント≫<br>\n\n - 攻撃、バリアのグラフィック改善\n - 攻撃の進行方向を変えられるようにした（前回は上方向のみ）\n - バリアで攻撃が防げるようにした\n<br>\n<br>\n\nhttps://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic3.html<br>\n\n<br>\n※カメラの使用許可をお願いします。スマホでもできます！<br>\n<br>\n---\n<br>\n\n## やってみた流れ\n<br>\n<br>\n\n1. GPT-5.1にスプライトシートを作成してもらう\n2. pythonで横一列に加工\n3. インタラクティブARのhtmlファイルにスプライトシートを読み込ませる\n\n<br>\n<br>\n攻撃をどうやってかっこよくするかがポイントでした。\n<br>\n<br>\n動画生成AIを使えば一発なのかもしれませんが、<br>\n貧乏な私はGPTさんに作成してもらいました。<br>\n\n![alt text](posts/web_images/exp-010-4c528fd9.webp)\n\n<br>\nプロンプトもGPTに作ってもらいました<br>\n<br>\nこのままでもいけるみたいですが、調整とかを考慮して横一直線に並べます。\npythonで画像変換しました。<br>\n\n![alt text](posts/web_images/exp-010-979d2bbd.webp)\n\n<br>\n<br>  \n\n![alt text](posts/web_images/exp-010-82ebb2fc.webp)\n\n水魔法はこんな感じ<br>\n\n<br>\n<br>\n\n![alt text](posts/web_images/exp-010-4f2a72dd.webp)\n<br>\n<br>\n\n指の本数で出てくる魔法が変わります。\n<br>\n\n- 0：水魔法\n- 1：雷魔法\n- 2：炎魔法\n- 3：毒（闇）魔法\n- 4,5：防御魔法（バリア）\n<br>\n<br>\n<br>\nみなさんもぜひおためしを！\n<br>\n<br>\n\n\nhttps://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic3.html<br>\n\n<br>\n<br>\n<br>\n参考：スプライトシートのプロンプト<br>\nCreate a sprite sheet of a fireball magic effect.\nThe sheet should be in a 3x4 grid (3 columns, 4 rows), totaling 12 frames.\nEach frame shows the same fireball in the exact same position,\nwith a consistent camera angle, identical size and silhouette.\nThe fireball is a glowing orb of swirling blue-orange flames,\nwith a bright magical core and small sparks around it.\nThe animation between frames should be subtle and smooth:\nonly tiny flame deformation, small particle movement,\nno changes in size, no shifts in position, no rotation of the camera.\nUse a transparent background or a perfectly clean dark background with no artifacts.\nDo not add borders between the frames.\nKeep the spacing uniform so the image forms a clean grid.\nStyle: fantasy VFX, high detail, crisp edges, no smoke, no extra objects.\nThe output should look like a sprite sheet for a game or AR effect.\n<br>\n\n\n---\n<br>\n\n## 気づき・メモ\n<br>\n\n- 中二ごころをくすぐります。めっちゃ楽しい。\n- 魔法は一部息子の要望です。\n- 雷とバリアは描写に2種のスプライトシートを使ってます。凝ってる。\n<br>\n\n---\n<br>\n\n## まとめ（Result）\n<br>\n\n**やっぱり見た目って大事、テンション上がる**\n<br>",
+      "links": []
+    }
+  },
+  {
     "id": "exp-009",
     "title": "魔法使いに俺はなる！",
     "date": "2025-12-07",
