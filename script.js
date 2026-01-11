@@ -301,6 +301,13 @@ function openModal(data) {
     }
 
     // Show modal
+    if (data && data.id) {
+        const nextHash = `#exp=${data.id}`;
+        if (location.hash !== nextHash) {
+            history.replaceState(null, '', location.pathname + location.search + nextHash);
+        }
+    }
+
     modal.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
 }
