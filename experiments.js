@@ -13,6 +13,7 @@ const experiments = [
       "画像認識"
     ],
     "image": "posts/web_images/exp-010-b630a2da.webp",
+    "shareUrl": "#exp=exp-010",
     "summary": "名前を言ってはいけないよこぼ",
     "detail": {
       "content": "<br>\n\n## これは何の実験？\n<br>\n前回の魔法インタラクティブARを改良しました。<br>\n<br>\n<br>\n≪改良ポイント≫<br>\n\n - 攻撃、バリアのグラフィック改善\n - 攻撃の進行方向を変えられるようにした（前回は上方向のみ）\n - バリアで攻撃が防げるようにした\n<br>\n<br>\n\nhttps://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic3.html<br>\n\n<br>\n※カメラの使用許可をお願いします。スマホでもできます！<br>\n<br>\n---\n<br>\n\n## やってみた流れ\n<br>\n<br>\n\n1. GPT-5.1にスプライトシートを作成してもらう\n2. pythonで横一列に加工\n3. インタラクティブARのhtmlファイルにスプライトシートを読み込ませる\n\n<br>\n<br>\n攻撃をどうやってかっこよくするかがポイントでした。\n<br>\n<br>\n動画生成AIを使えば一発なのかもしれませんが、<br>\n貧乏な私はGPTさんに作成してもらいました。<br>\n\n![alt text](posts/web_images/exp-010-4c528fd9.webp)\n\n<br>\nプロンプトもGPTに作ってもらいました<br>\n<br>\nこのままでもいけるみたいですが、調整とかを考慮して横一直線に並べます。\npythonで画像変換しました。<br>\n\n![alt text](posts/web_images/exp-010-979d2bbd.webp)\n\n<br>\n<br>  \n\n![alt text](posts/web_images/exp-010-82ebb2fc.webp)\n\n水魔法はこんな感じ<br>\n\n<br>\n<br>\n\n![alt text](posts/web_images/exp-010-4f2a72dd.webp)\n<br>\n<br>\n\n指の本数で出てくる魔法が変わります。\n<br>\n\n- 0：水魔法\n- 1：雷魔法\n- 2：炎魔法\n- 3：毒（闇）魔法\n- 4,5：防御魔法（バリア）\n<br>\n<br>\n<br>\nみなさんもぜひおためしを！\n<br>\n<br>\n\n\nhttps://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic3.html<br>\n\n<br>\n<br>\n<br>\n参考：スプライトシートのプロンプト<br>\nCreate a sprite sheet of a fireball magic effect.\nThe sheet should be in a 3x4 grid (3 columns, 4 rows), totaling 12 frames.\nEach frame shows the same fireball in the exact same position,\nwith a consistent camera angle, identical size and silhouette.\nThe fireball is a glowing orb of swirling blue-orange flames,\nwith a bright magical core and small sparks around it.\nThe animation between frames should be subtle and smooth:\nonly tiny flame deformation, small particle movement,\nno changes in size, no shifts in position, no rotation of the camera.\nUse a transparent background or a perfectly clean dark background with no artifacts.\nDo not add borders between the frames.\nKeep the spacing uniform so the image forms a clean grid.\nStyle: fantasy VFX, high detail, crisp edges, no smoke, no extra objects.\nThe output should look like a sprite sheet for a game or AR effect.\n<br>\n\n\n---\n<br>\n\n## 気づき・メモ\n<br>\n\n- 中二ごころをくすぐります。めっちゃ楽しい。\n- 魔法は一部息子の要望です。\n- 雷とバリアは描写に2種のスプライトシートを使ってます。凝ってる。\n<br>\n\n---\n<br>\n\n## まとめ（Result）\n<br>\n\n**やっぱり見た目って大事、テンション上がる**\n<br>",
@@ -28,19 +29,11 @@ const experiments = [
       "画像認識"
     ],
     "image": "posts/web_images/exp-009-96919e8a.webp",
+    "shareUrl": "#exp=exp-009",
     "summary": "ステューピファイ！",
     "detail": {
-      "content": "<br>\n\n## これは何の実験？\n<br>\n「インタラクティブAR」にチャレンジしました。<br>\n<br>\n最後まで読んでられねーよ！って人はサイトにアクセスしてみてください。<br>\n<br>\n指の本数を数える：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar2.html<br>\n魔法を出す：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic2.html<br>\n<br>\n※カメラの使用許可をお願いします\n<br>\n---\n<br>\n\n## やってみた流れ\n<br>\n<br>\n\n1. 指の本数を数えるファイルを作成\n2. なんか一本多く数えちゃったりしたので修正\n3. せっかくなので指の本数に従って魔法がでるようにしてみた\n\n<br>\n<br>\nスマホ連携は非常にややこしそうだったので、とりあえずwebカメラで動くものを作ってみました。<br>\n<br>\n<br>\n技術的な話です。<br>\n最初はTensorFlowのHandposeを使っていたのですが、<br>\n手1本しか認識できなかったり精度が・・・だったりしたので、<br>\nGoogleのMediaPipe Handsを使用しました。<br>\n<br>\n\n![alt text](posts/web_images/exp-009-b8515186.webp)\n指の本数を誤認識している。親指のせいみたい。\n<br>\n<br>\n\n![alt text](posts/web_images/exp-009-64114169.webp)\n成功です。ネコチャンは動画編集でつけただけです。<br>\n<br>\n<br>\nせっかくなので、指の本数に応じた魔法をつけてもらいました。\n\n<br>\n<br>\nぜひURLから試してみてください。（カメラ使用許可してください！）\n<br>\n<br>\n<br>\n\n指の本数を数える：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar2.html<br>\n魔法を出す：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic2.html<br>\n<br>\n\n\n---\n<br>\n\n## 気づき・メモ\n<br>\n\n- 初めてのインタラクティブAR。なかなか楽しかった。\n- 指の形って難しい。親指が邪魔するんだねぇ。\n<br>\n\n---\n<br>\n\n## まとめ（Result）\n<br>\n\n**次回はもっと魔法をかっこよくしたい**\n<br>",
-      "links": [
-        {
-          "label": "公式サイト",
-          "url": "https://..."
-        },
-        {
-          "label": "GitHub",
-          "url": "https://..."
-        }
-      ]
+      "content": "<br>\n\n## これは何の実験？\n<br>\n「インタラクティブAR」にチャレンジしました。<br>\n<br>\n最後まで読んでられねーよ！って人はこちらのサイトにアクセスしてみてください。<br>\n<br>\n\n指の本数を数える：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar2.html<br>\n\n魔法を出す：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic2.html<br>\n<br>\n※カメラの使用許可をお願いします\n<br>\n---\n<br>\n\n## やってみた流れ\n<br>\n<br>\n\n1. 指の本数を数えるファイルを作成\n2. なんか一本多く数えちゃったりしたので修正\n3. せっかくなので指の本数に従って魔法がでるようにしてみた\n\n<br>\n<br>\nスマホ連携は非常にややこしそうだったので、とりあえずwebカメラで動くものを作ってみました。<br>\n<br>\n→(2025.12.12追記)スマホでも問題なく動きました！！\n<br>\n<br>\n技術的な話です。<br>\n最初はTensorFlowのHandposeを使っていたのですが、<br>\n手1本しか認識できなかったり精度が・・・だったりしたので、<br>\nGoogleのMediaPipe Handsを使用しました。<br>\n<br>\n\n![alt text](posts/web_images/exp-009-b8515186.webp)\n指の本数を誤認識している。親指のせいみたい。\n<br>\n<br>\n\n![alt text](posts/web_images/exp-009-64114169.webp)\n成功です。ネコチャンは動画編集でつけただけです。<br>\n<br>\n<br>\nせっかくなので、指の本数に応じた魔法をつけてもらいました。\n\n<br>\n<br>\nぜひURLから試してみてください。（カメラ使用許可してください！）\n<br>\n<br>\n<br>\n\n指の本数を数える：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar2.html<br>\n魔法を出す：https://yokobo103.github.io/AI-Lab-Site/ar/interactive_ar_magic2.html<br>\n<br>\n\n\n---\n<br>\n\n## 気づき・メモ\n<br>\n\n- 初めてのインタラクティブAR。なかなか楽しかった。\n- 指の形って難しい。親指が邪魔するんだねぇ。\n<br>\n\n---\n<br>\n\n## まとめ（Result）\n<br>\n\n**次回はもっと魔法をかっこよくしたい**\n<br>",
+      "links": []
     }
   },
   {
@@ -52,6 +45,7 @@ const experiments = [
       "SPAR3D"
     ],
     "image": "posts/web_images/exp-008-ddea48c1.webp",
+    "shareUrl": "#exp=exp-008",
     "summary": "大幅グレードアップネコチャン",
     "detail": {
       "content": "<br>\n\n## これは何の実験？\n<br>\n前回までの初代ネコチャンもまあまあ好きだったんですが、 <br>\nもうちょっとトップ画像のネコに近い3Dモデルを作ろうという試みです。 \n<br>\n<br>\n---\n<br>\n\n## やってみた流れ\n<br>\n<br>\n\n1. ピクセル猫は3D化に向かないことが判明\n2. 3Dアニメっぽい猫をGPTに作ってもらう\n3. SF3Dは気に入らなかったのでSPAR3Dで3Dモデルをつくる\n4. ARで召喚\n\n<br>\n<br>\nトップ画像のネコはピクセルアート風なんですが、<br>\nこれは3D化に向かないんです。<br>\nこうなります。<br>\n\n![alt text](posts/web_images/exp-008-9cd508ab.webp)\n\n<br>\n\nそこで、GPTさんに3Dアニメ風の猫を作ってもらいました。<br>\nなかなかいい働きでした。一発OKです。<br>\n<br>\n\n\n![alt text](posts/web_images/exp-008-b854d4bc.webp)\n\n<br>\n<br>\n<br>\nそしてここからは、前回断念した2D→3Dの変換です。 \n<br>\n<br>\nHugging Faceというサイトで2D→3DにできるAIモデルを探してきました。\n<br>\n<br>\n\n\n<small>Hugging Face:AI開発に必要な学習済みモデル、データセット、ライブラリなどのプラットフォーム</small>\n<br>\n<br>\n初めに\"SF3D\"というモデルを使いましたが、ちょっと歯を見せてきたのが気に入らなくてやめました。でもすごい。<br>\n<br>\n\n![alt text](posts/web_images/exp-008-87fe8353.webp)\n\n次は\"SPAR3D\"というモデル。完璧やん。<br>\n\n![alt text](posts/web_images/exp-008-49cdd19c.webp)\n\n<br>\n<br>\n<br>\n\nさあここまで来たらもう前回と同じくhtmlファイルを作って、<br>\nAR化するだけです。<br>\n<br>\nどん！！！！\n\n<br>\n<br>\n\n![alt text](posts/web_images/exp-008-6769cfed.webp)\n\n![alt text](posts/web_images/exp-008-ddea48c1.webp)\n\n![alt text](posts/web_images/exp-008-693c23ef.webp)\n\n<br>\n超感動です！！！\n\n<br>\n<br>\n<br>\n\n**スマホのカメラでこのQRコードを読み込むと、**<br>\n**自作3DモデルをARで床に置いて見ることができます！**<br>\n<br>\n\n![alt text](posts/web_images/exp-008-a7003c21.webp)\n\n\n<br>\n\n\n<br>\n---\n<br>\n\n## 気づき・メモ\n<br>\n\n- ピクセルアートって3D向かないんだな\n- 3Dアニメ風は完璧に3Dになった、たぶん学習データとも関係してる気がする\n- 2回目だろうがスマホに表示されたときの感動は変らない\n<br>\n<br>\n\n---\n<br>\n\n## まとめ（Result）\n<br>\n\n**さよなら初代ネコチャン・・・完璧な3Dネコが爆誕したよ・・・**\n<br>",
@@ -76,6 +70,7 @@ const experiments = [
       "3Dモデル"
     ],
     "image": "posts/web_images/exp-007-148c68e3.webp",
+    "shareUrl": "#exp=exp-007",
     "summary": "俺のAR時代が始まったぜ！",
     "detail": {
       "content": "## これは何の実験？\nこのログは **「AR開発してみた記録」** です。  \nそうなんです、そもそもなぜ3Dモデルに興味持ったかというと、ARやってみたかったからなんです。\n<br>\n最後まで読んでくださいね・・・\n<br>\n\n---\n\n## やってみた流れ\n<br>\n1. 前回作ったglbファイルをudszに変換\n2. AR用のhtmlファイルを作る\n3. iPhoneで試してみる\n<br>\n前回作ったネコチャンはglbという形式のファイルです。\n私はiPhoneなので、iOSでテストができるようにusdzという形式のファイルに変換しなければいけません。\n（私も初めて知りました。3Dファイルなんて普段つかいませんからね）\n<br>\n<br>\n<br>\n<small>glb：3Dモデルの形や色、アニメーションなどをひとまとめにした、Webでもアプリでも扱いやすい万能形式です。ゲームやブラウザ表示にそのまま使われます。</small><br>\n<small>usdz：Apple製品（iPhone・iPad）でAR表示するために最適化された3Dファイルです。読み込みが速く、ARでそのまま立体を置いて見られます。</small>\n<br>\n<br>\n<br>\n<br>\nファイル形式の変換のために、わざわざ「Blender」という3Dモデリングソフトをインストールしました。<br>\nいいんです、Blenderは気になっていたので。いずれ使いこなします。<br>\n<br>\n\n![alt text](posts/web_images/exp-007-62f3b611.webp)\n<small>blenderでファイル変換されるネコチャン</small>\n\n<br>\n<br>\nそしてhtmlファイルを作成。↓の部分で画像ファイルを指定しているみたい。\nテストはできていないですが、glbファイルでAndoroidでも動く・・・はず。\n\n```\n<model-viewer\n  src=\"../models/cat.glb\"\n  ios-src=\"../models/cat.usdz\"\n  ar\n```\n\nさて、お待ちかね。いっくぜー！\n![alt text](posts/web_images/exp-007-4e64fc66.webp)\n<br>\nあれ？失敗しました・・・<br>\n<br>\n気を取り直してもう1回！！！\n<br>\n<br>\n\n![alt text](posts/web_images/exp-007-6680fe49.webp)\n<br>\nおおー！！<br>\nできてる！！<br>\nすごい！！！<br>\n\n![alt text](posts/web_images/exp-007-9fd98427.webp)\n\n\n<br>\n<br>\n\n**スマホのカメラでこのQRコードを読み込むと、**<br>\n**自作3DモデルをARで床に置いて見ることができます！**<br>\n<br>\n\n![alt text](posts/web_images/exp-007-4461fb34.webp)\n\n\n<br>\n<br>\n\n\n\n---\n\n## 気づき・メモ\n<br>\n- 3Dモデルに不慣れすぎて手こずったけど、3Dモデル作ってからARは本当にあっという間にできた\n- 他にも色んなファイルでできそう\n<br>\n---\n\n## まとめ（Result）\n<br>\n\n**目の前に3Dモデルが現れるのは、言い表すことのできない感動がありました。**\n\n<br>",
@@ -100,6 +95,7 @@ const experiments = [
       "Genie"
     ],
     "image": "posts/web_images/exp-006-aeb37224.webp",
+    "shareUrl": "#exp=exp-006",
     "summary": "一覧に出る一言まとめ",
     "detail": {
       "content": "## これは何の実験？\n3Dモデルに手を出したい気分<br>\n<br>\nトライしたAI\n- Genie (Luma AI)  \n- Tripo AI\n<br>\nとにかく、このアイコンを3D化したい、というのがモチベーションでした。\n\n![alt text](posts/web_images/exp-006-59733a0d.webp)\n\n<br>\n---\n\n## やってみた流れ\n\n1. Tripo AIをためしてみる\n2. Tripo AIをあきらめる\n3. Genieをためしてみる\n4. あきらめのネコを錬成する\n\n<br>\n\n**Tripo AI**\n\nひとまずためしたのが「Tripo　AI」です。<br>\n<br>\n3D化するのに必要な画像はnanobananaが作ってくれたので（←すごい！）<br>\n画像をもとに3Dモデルを生成できるという噂のこいつを使ってみることにしました。\n\n![alt text](posts/web_images/exp-006-aa4d24d7.webp)\n\n\nどんなのができるかな。。。わくわく！！\n\n<br>\n<br>\n\nできた3Dモデル（でーん）\n![alt text](posts/web_images/exp-006-33deb907.webp)\n\n<br>\nうーん・・・\nこれは・・・\n色がつかないです！（失敗）\n\nちなみにTripoはクレジット消費タイプです。<br>\n僕はあまり使いこなせていないので誰かためしていただきたいです！<br>\n（でもエクスポートが有料みたい・・・）\n\n<br>\n<br>\n\n**Genie**\n\n仕方なく、Genieで遊ぶことにしました。<br>\nなんで仕方ないのかと言うと、Genieは画像を読み込めないことがわかっていたからです。<br>\n（というか事前チャレンジしました）\n\nどうやらプロンプトから3Dモデルを生成できるのがウリのこいつ、<br>\n仕方がない、プロンプトを駆使してよこぼ猫を産み出すしかありません。。。！\n\n![alt text](posts/web_images/exp-006-f0e5402e.webp)\nGenieのトップ画面はこんな感じ。<br>\nプロンプトを入力したら3Dモデルができます。（どうやら英語じゃなきゃだめっぽい）<br>\n<br>\nGPTと相談して、アイコン猫をかんぺきに再現できるプロンプトを用意しました。<br>\nこれでもくらえ！！たのむ！！！\n\n![alt text](posts/web_images/exp-006-31108167.webp)\nねこー！！<br>\nなんかこわい・・・\n\n![alt text](posts/web_images/exp-006-331ba31a.webp)\n最終的にこいつが（強いて言えば）気に入ったので3Dモデルをダウンロードしました。<br>\nどんな風に遊んでやろうかな・・・\n\n<br>\n<br>\n\n---\n\n## 気づき・メモ\n\n- 3Dモデルはなかなか難しかった・・・\n- Genieはとっても面白い。思うようにいかないところがまた面白い。\n- 今回ゲットした猫で遊びたい\n\n---\n\n## まとめ（Result）\n**こうして3D沼の冒険が始まったのであった**",
@@ -124,6 +120,7 @@ const experiments = [
       "probanana"
     ],
     "image": "posts/web_images/exp-005-11d74090.webp",
+    "shareUrl": "#exp=exp-005",
     "summary": "サイトが華やかになりました🐈",
     "detail": {
       "content": "## これは何の実験？\n今回はわかりやすく **「トップ画像をつくってみよう」** です。  \nいまのシンプルなデザインもいいんだけれど、やっぱりトップ画像、入れてみたいよね。\n<br>\n---\n\n## やってみた流れ\nよこぼのnote,X等のアイコン画像をもとに、ヘッダー画像を作って欲しいと依頼。\n\n**■Chat GPT**\n![alt text](posts/web_images/exp-005-8d9b5b76.webp)\n\n→うん、まあ悪くはない。日本語も意外とかけている。\n　そしてちょっと欲が出ました。文字はピクセル風がいいなぁ・・・\n\n![alt text](posts/web_images/exp-005-d6e113eb.webp)\n\n→うーん、\"よこほ\"かぁ・・・やっぱり崩れちゃうよね、別チャットで再トライしよう。\n\n![alt text](posts/web_images/exp-005-11d74090.webp)\n\n→なかなかいいじゃない。\n　💡生成（文章・画像）がうまくいかないときは別チャットに切り替えるのがおすすめです\n<br>\n<br>\n\n**■Gemini(nanobanana)**\n\n![alt text](posts/web_images/exp-005-93b04c6e.webp)\n\n→なかなかかっこよさげ。でも文字がちょっと惜しい。日本語超えちゃってる。\n\n\n![alt text](posts/web_images/exp-005-0c8bb3d1.webp)\n\n→よこ\"ば\"かぁ、\"ぼ\"って難しいんだなぁ・・・\n<br>\n<br>\n\n**■Gemini(probanana)**\n\n![alt text](posts/web_images/exp-005-1d27f2f2.webp)\n\n\n→やるじゃん。文句無いっす。ありがとうございます🙇‍♂️\n<br>\n\n---\n\n## 気づき・メモ\n\n- やっぱりプロバナナはすごい\n- AIって何回もやってみるのが大事だよね\n- \"ぼ\"ってすごく難しいんだなぁ\n<br>\n---\n\n## まとめ（Result）\n**トップ画像ができたのうれしい😊**",
@@ -144,6 +141,7 @@ const experiments = [
       "music"
     ],
     "image": "posts/web_images/exp-004-b13e346b.webp",
+    "shareUrl": "#exp=exp-004",
     "summary": "もうこれでいいじゃん",
     "detail": {
       "content": "## これは何の実験？\nこのログは **「久々にsunoをいじったらおったまげた記録」** です。  \n音楽生成AIの「suno」についてです。\n\n\n<span style=\"color: #727272ff;\">\nsuno:音楽作れるすげぇ生成AI。以上！\n</span>\n\n\n---\n\n## やってみた流れ\nsuno.comにアクセス。アカウントは以前つくったものがある。\n\n1. プロンプト「気が狂ったような猫の歌。無駄におしゃれ。ジャズロック」\n2. 「Create」を押す\n3. 4曲生成される（v4.5はフルで聴ける、v5は1分しか聴けない）\n4. おったまげる\n\n\n\n<div style=\"position:relative; width:100%; aspect-ratio:16/9; max-width:800px;\">\n  <iframe src=\"https://www.youtube.com/embed/r7mBFzmFgcA?si=MHn7TXDEgQ7I1sRo\"\n          style=\"position:absolute; inset:0; width:100%; height:100%;\"\n          frameborder=\"0\" allowfullscreen\n          allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\"></iframe>\n</div>\n\n\n\n⚠️ちなみに商用利用は有料プランに入る必要があるのでご注意を\n\n\n## 気づき・メモ\n\n- v3.5に比べて圧倒的にすごくなっている気がする・・・\n　　（以前動画とっておけばよかった・・・）\n- 好みの音楽を毎日作る時代が来るのか？！\n\n---\n\n## まとめ（Result）\n**sunoすごいよ、みんなも楽しいからやってみなよ**",
@@ -164,6 +162,7 @@ const experiments = [
       "probanana"
     ],
     "image": "posts/web_images/exp-003-c0164500.webp",
+    "shareUrl": "#exp=exp-003",
     "summary": "もうプロバナナは誰にも止められない。",
     "detail": {
       "content": "## これは何の実験？\nいま話題の **Nano Banana Pro（probanana）** が  \nどれくらい “ヤバいレベル” で進化しているのかを、  \n**ライトな比較実験**としてまとめたログです。\n\n比べたのは、以下の同じプロンプト：\n\n> **プロンプト**  \n> サイベリアン（猫）がAIのすごさに驚き、猛勉強し、  \n> 超高性能アンドロイド（猫型）を作るまでのストーリーを、  \n> **4コマ漫画**でお願いします。台本はお任せします。\n\n---\n\n## やってみた流れ\n\n### 🔹 nanobanana（旧）\n![alt text](posts/web_images/exp-003-bb55eb02.webp)\n\nまずこれでも十分すごい。  \nでも——\n\n- 日本語が崩壊  \n- というか、もはや日本語なのかすらわからない  \n\n\n### 🔹 probanana（新・Pro）\n![alt text](posts/web_images/exp-003-3ca34738.webp)\n\n**すごい、すごすぎる。**  \n圧倒的に “整った” 4コマ。  \nちゃんとストーリーになってるし、画風も統一されてる。\n\nGoogleさん、これはもうマイッチングですよ……。\n\n---\n\n## 気づき・メモ\n- 圧倒的破壊力プロバナナ\n- **日本語生成の破壊力が桁違い**（自然さが急上昇）\n- こりゃあ世界変わりますわ\n\n---\n\n## まとめ（Result）\n**すごすぎる。  \nとにかくすごいよ、プロバナナ。**",
@@ -184,6 +183,7 @@ const experiments = [
       "Website"
     ],
     "image": "posts/web_images/exp-002-51db2f60.webp",
+    "shareUrl": "#exp=exp-002",
     "summary": "Webサイトの画像がはみ出す問題を、朝の10分でAIに直してもらったログ。",
     "detail": {
       "content": "## これは何の実験？\n当サイトの「画像が右側にビヨーンとはみ出す問題」を  \n**Codex 先生に10分で直してもらった記録**です。\n\n- Web初心者あるある：CSSがわからん\n- エンジニアなら一瞬でも、非エンジニアには難易度が高い\n- でもAIなら、相談 → 修正 → コード生成 → 完了 が10分\n\nそんな “AIの便利さ” を実感した回。\n\n\n<span style=\"color: #727272ff;\">\nvscodeとは・・・\n　VS Code は「パソコンで文章を書くみたいに、プログラムもかんたんに書けるアプリ」だよ。\n　難しい設定なしで、コードを書く・保存する・動かすがひとつでできる便利ツール。\n</span>\n<br>\n---\n\n## やってみた流れ\n\nまずは問題の様子。  \n記事に貼った画像がこんな風に **びよーん** とはみ出してしまっていた…👇\n\n![alt text](posts/web_images/exp-002-56fddbfe.webp)\n\nエンジニアの人なら CSS をちょいっと書き換えて終わりなんだろうけど、  \nよこぼは **非エンジニアの超初心者🔰**。\n\nということで、ここで **こーでっくすぅ！（Codex）** の出番。\n\n「画像がはみ出ちゃうんだけど、なんとかならない？」  \nと聞いたら、ほんとに10分かからず修正コードを出してくれた。\n\n修正後はこちら👇  \n（ちゃんと収まってる！）\n\n![alt text](posts/web_images/exp-002-15a8ee6d.webp)\n\nもう完全にドラ○もんの世界。\n<br>\n---\n\n## 修正の様子（動画）\n2025-11-28  \nCodex が実際に修正しているところを動画にしました。\n\n（無音だと寂しかったので BGM つきです。  \n音量注意！BGM は Suno v4.5 に作ってもらいました）\n\n<div style=\"position:relative; width:100%; aspect-ratio:16/9; max-width:800px;\">\n  <iframe src=\"https://www.youtube.com/embed/L7nFxrT3NHM?si=aB9fHzcNMbDJNtkC\"\n          style=\"position:absolute; inset:0; width:100%; height:100%;\"\n          frameborder=\"0\" allowfullscreen\n          allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\"></iframe>\n</div>\n<br>\n---\n\n## 気づき・メモ\n\n- まさか朝一で自分のwebサイトを修正する日が来るとは・・・\n- vscodeでAIとチャットしながら編集する体験ってちょっと近未来的\n- GitHub Pages への push まで含めて **10分以内** は普通に革命\n<br>\n---\n\n## まとめ（Result）\n**GPT-5.1-Codex-Max、圧倒的に速い。<br> AIに「小さな修正」を任せると、世界がめちゃ軽くなる。**",
@@ -204,6 +204,7 @@ const experiments = [
       "GitHub Pages"
     ],
     "image": "posts/web_images/exp-001-788c66cb.webp",
+    "shareUrl": "#exp=exp-001",
     "summary": "Antigravityにwebサイト作ってもらった（これのこと）",
     "detail": {
       "content": "## これは何の実験？\nGoogleの **Antigravity** に、  \n**実際に Web サイトを丸ごと作ってもらえるのか？**  \nを試したログ。\n\n- 「AIにサイト作れるの？」という人向け\n- コードを書かずにサイトを持ちたい人にも刺さる\n\n\n<span style=\"color: #727272ff;\">\nそもそもAntigravityってなに？？\n→「話すだけでWebサイトを作ってくれる“AI職人”」\n（でもコードを扱うのでエンジニアじゃない人からみたらちょっといかつい・・・）\n</span>\n\n---\n\n## やってみた流れ\n1. Antigravityをダウンロード  \n2. GPTとに相談して構想を立てる  \n3. Antigravity用プロンプトを作ってもらう  \n4. そのまま Antigravity に投げたら…約30分でサイト完成！！  \n5. GitHub Pages にアップして公開！\n\n\n最初はぜんぶ英語で出力してきたけど、\n「仕様書と回答は日本語にしてねー」とお願いしたら  \n「ごめんごめん！」ってちゃんと直してくれる。やさしい。\n\n\n\n仕様書はこんな感じで生成される👇  \n（しごとがていねい！）\n\n![implement](posts/web_images/exp-001-02f41c35.webp)\n\n\nさらに対話力もすごい。こんな質問も余裕で返してくれる👀\n\n![antigravity](posts/web_images/exp-001-e29d0c94.webp)\n\n\n\n話すだけでこんなサイトつくってくれるなんておどろきー！！！\n![alt text](posts/web_images/exp-001-69fed1c3.webp)\n\n\n---\n\n## 気づき・学び\n- Antigravityのしごでき\n- 仕様書がていねいで勉強になるなー\n- GPTとの事前ブレストがめちゃ大事（ここで方向性固まる）\n\n---\n\n## まとめ（Result）\n**君が今見ているサイトがResultだよ**\nAntigravity、本当に30分でここまで作ってくれる。",

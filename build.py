@@ -1,7 +1,7 @@
 ﻿import os
+import sys
 import json
 import re
-import glob
 from pathlib import Path
 import hashlib
 
@@ -20,11 +20,40 @@ POSTS_DIR = ROOT_DIR / 'posts'
 OUTPUT_FILE = ROOT_DIR / 'experiments.js'
 TEMPLATE_FILE = '_template.md'
 LAB_LOGS_FILE = ROOT_DIR / 'lab_logs.json'
+CACHE_FILE = ROOT_DIR / 'build_cache.json'
 
 # 軽量版画像の出力先（ルート直下の posts/web_images/）
 WEB_IMAGE_SUBDIR = 'posts/web_images'
 WEB_IMAGE_DIR = ROOT_DIR / WEB_IMAGE_SUBDIR
 WEB_IMAGE_DIR.mkdir(exist_ok=True)
+
+
+def compute_file_hash(filepath: Path) -> str:
+    """ファイルの sha1 を計算する（差分更新用）。"""
+    sha1 = hashlib.sha1()
+    with filepath.open('rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            sha1.update(chunk)
+    return sha1.hexdigest()
+
+
+def load_cache() -> dict:
+    if not CACHE_FILE.exists():
+        return {'files': {}}
+    try:
+        with CACHE_FILE.open('r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, dict) and isinstance(data.get('files'), dict):
+                return data
+            print(f"[WARN] {CACHE_FILE.name} の形式が不正なため初期化します。")
+    except Exception as e:
+        print(f"[WARN] {CACHE_FILE.name} の読み込みに失敗しました: {e}")
+    return {'files': {}}
+
+
+def save_cache(cache: dict) -> None:
+    with CACHE_FILE.open('w', encoding='utf-8') as f:
+        json.dump(cache, f, indent=2, ensure_ascii=False)
 
 
 def normalize_rel_path(path_str: str) -> str:
@@ -176,6 +205,8 @@ def parse_md_file(filepath: str | Path):
 
     exp_id = metadata.get('id', '')
 
+    share_url = f"#exp={exp_id}" if exp_id else ""
+
     # frontmatter の image を軽量版パスに
     original_image_rel = metadata.get('image', '')
     web_image_rel = ''
@@ -192,6 +223,7 @@ def parse_md_file(filepath: str | Path):
         'date': metadata.get('date', ''),
         'tags': metadata.get('tags', []),
         'image': web_image_rel,  # サムネ用の軽量版
+        'shareUrl': share_url,
         'summary': metadata.get('summary', ''),
         'detail': {
             'content': body_rewritten,  # 画像パスを書き換えた本文
@@ -220,21 +252,71 @@ def load_lab_logs() -> list:
         return []
 
 
+def safe_parse_md_file(filepath: Path):
+    try:
+        return parse_md_file(filepath)
+    except Exception as e:
+        print(f"[ERROR] パースに失敗しました: {filepath} -> {e}")
+        return None
+
+
 def main():
     experiments = []
+    cache = load_cache()
+    cache_files = cache.setdefault('files', {})
 
-    # Get all .md files in posts dir
-    files = glob.glob(str(POSTS_DIR / '*.md'))
+    target_path = None
+    target_rel = None
+    if len(sys.argv) > 1:
+        arg_path = Path(sys.argv[1])
+        target_path = arg_path if arg_path.is_absolute() else (ROOT_DIR / arg_path).resolve()
+        if not target_path.exists():
+            print(f"[ERROR] 指定ファイルが見つかりません: {target_path}")
+            return
+        try:
+            target_rel = normalize_rel_path(str(target_path.relative_to(ROOT_DIR)))
+        except Exception:
+            print(f"[ERROR] 指定ファイルがプロジェクト外です: {target_path}")
+            return
+
+    # Get all .md files in posts dir (recursive)
+    files = [p for p in POSTS_DIR.rglob('*.md') if not p.name.startswith('_')]
+
+    current_rel_paths = set()
+    for filepath in files:
+        rel_path = normalize_rel_path(str(filepath.relative_to(ROOT_DIR)))
+        current_rel_paths.add(rel_path)
+
+    # Remove deleted files from cache
+    for cached_path in list(cache_files.keys()):
+        if cached_path not in current_rel_paths:
+            del cache_files[cached_path]
 
     for filepath in files:
+        rel_path = normalize_rel_path(str(filepath.relative_to(ROOT_DIR)))
         filename = os.path.basename(filepath)
-        if filename.startswith('_'):  # Skip template
+        file_hash = compute_file_hash(filepath)
+        cached_entry = cache_files.get(rel_path)
+
+        if target_rel and rel_path != target_rel:
+            if cached_entry and cached_entry.get('experiment'):
+                experiments.append(cached_entry['experiment'])
+            else:
+                print(f"[WARN] キャッシュが無いためスキップ: {rel_path}")
+            continue
+
+        if cached_entry and cached_entry.get('hash') == file_hash and cached_entry.get('experiment'):
+            experiments.append(cached_entry['experiment'])
             continue
 
         print(f"Processing {filename}...")
-        exp = parse_md_file(filepath)
+        exp = safe_parse_md_file(filepath)
         if exp:
+            cache_files[rel_path] = {'hash': file_hash, 'experiment': exp}
             experiments.append(exp)
+        else:
+            if rel_path in cache_files:
+                del cache_files[rel_path]
 
     # Sort by date desc
     experiments.sort(key=lambda x: x['date'], reverse=True)
@@ -255,6 +337,8 @@ const labLogs = {json.dumps(lab_logs, indent=2, ensure_ascii=False)};
 
     with OUTPUT_FILE.open('w', encoding='utf-8') as f:
         f.write(js_content)
+
+    save_cache(cache)
 
     print(f"Successfully generated {OUTPUT_FILE} with {len(experiments)} experiments.")
 

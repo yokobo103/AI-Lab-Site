@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCdle();
     setupThemeToggle();
     setupModal();
+    openModalFromHash();
 });
 
 /**
@@ -199,6 +200,9 @@ function setupModal() {
     const closeModal = () => {
         modal.classList.remove('active');
         document.body.style.overflow = ''; // Restore scrolling
+        if (location.hash.startsWith('#exp=')) {
+            history.replaceState(null, '', location.pathname + location.search);
+        }
     };
 
     closeBtn.addEventListener('click', closeModal);
@@ -210,6 +214,22 @@ function setupModal() {
             closeModal();
         }
     });
+}
+
+function getExperimentIdFromHash() {
+    const hash = window.location.hash || '';
+    if (!hash.startsWith('#exp=')) return null;
+    return decodeURIComponent(hash.slice(5));
+}
+
+function openModalFromHash() {
+    if (typeof experiments === 'undefined') return;
+    const expId = getExperimentIdFromHash();
+    if (!expId) return;
+    const expData = experiments.find(e => e.id === expId);
+    if (expData) {
+        openModal(expData);
+    }
 }
 
 function openModal(data) {
