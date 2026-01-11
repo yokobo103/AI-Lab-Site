@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupThemeToggle();
     setupModal();
     openModalFromHash();
+    window.addEventListener('hashchange', openModalFromHash);
 });
 
 /**
