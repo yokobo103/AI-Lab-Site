@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hand Magic (Spell Draw + Square Barrier)</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+    video { display: none; }
+  </style>
+</head>
+<body>
+  <video id="video" playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <script>
+    /****************************************************
+     * スプライト読み込み
+     ****************************************************/
+    const fireSprite    = new Image(); // 12 frames
+    const waterSprite   = new Image(); // 9 frames
+    const thunderSprite = new Image(); // 9 frames
+    const toxicSprite   = new Image(); // 9 frames
+
+    fireSprite.src    = "ar_images/fireball_1x12.png";
+    waterSprite.src   = "ar_images/waterball_1x9.png";
+    thunderSprite.src = "ar_images/thunder2_1x9.png";
+    toxicSprite.src   = "ar_images/toxicball_1x9_transparent.png";
+
+    const FIRE_FRAME_COUNT = 12;
+    const NINE_FRAME_COUNT = 9;
+
+    function isSpriteReady(img) {
+      return img && img.complete && img.naturalWidth > 0;
+    }
+
+    /****************************************************
+     * 指の状態
+     ****************************************************/
+    function getFingerStates(landmarks, handedness) {
+      let thumb = false, index = false, middle = false, ring = false, pinky = false;
+
+      const thumbTip = landmarks[4];
+      const thumbIP  = landmarks[3];
+      if (handedness === "Right") thumb = thumbTip.x < thumbIP.x - 0.02;
+      else                        thumb = thumbTip.x > thumbIP.x + 0.02;
+
+      const above = (tipIdx, baseIdx) => {
+        const tip  = landmarks[tipIdx];
+        const base = landmarks[baseIdx];
+        return tip.y < base.y - 0.01;
+      };
+
+      index  = above(8, 5);
+      middle = above(12, 9);
+      ring   = above(16, 13);
+      pinky  = above(20, 17);
+
+      const count = [thumb, index, middle, ring, pinky].filter(Boolean).length;
+      return { thumb, index, middle, ring, pinky, count };
+    }
+
+    /****************************************************
+     * 弾（プロジェクタイル）
+     ****************************************************/
+    const projectiles = [];
+    const projectileCooldown = {};
+    const lastDirs = new Map();
+
+    const PROJECTILE_SPEED = 18;
+    const PROJECTILE_LIFE = 60;
+
+    function resolveDir(handKey, dirX, dirY, allowUpdate = true) {
+      const len = Math.hypot(dirX, dirY);
+      if (len > 0.2 && allowUpdate) {
+        const nx = dirX / len;
+        const ny = dirY / len;
+        lastDirs.set(handKey, { x: nx, y: ny });
+        return { x: nx, y: ny };
+      }
+      return lastDirs.get(handKey) || { x: 0, y: -1 };
+    }
+
+    function spawnProjectile(handKey, x, y, dirX, dirY, sprite, frameCount, allowUpdate = true) {
+      if (!isSpriteReady(sprite)) return;
+
+      const now = performance.now();
+      const last = projectileCooldown[handKey] || 0;
+      if (now - last < 170) return;
+      projectileCooldown[handKey] = now;
+
+      const d = resolveDir(handKey, dirX, dirY, allowUpdate);
+
+      projectiles.push({
+        x: x + d.x * 12,
+        y: y + d.y * 12,
+        vx: d.x * PROJECTILE_SPEED,
+        vy: d.y * PROJECTILE_SPEED,
+        frame: 0,
+        life: PROJECTILE_LIFE,
+        sprite,
+        frameCount,
+      });
+    }
+
+    function drawProjectiles(ctx, shields) {
+      ctx.save();
+
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i];
+        if (!isSpriteReady(p.sprite)) {
+          projectiles.splice(i, 1);
+          continue;
+        }
+
+        const isToxic = p.sprite === toxicSprite;
+        ctx.globalCompositeOperation = isToxic ? "source-over" : "screen";
+        ctx.filter = isToxic ? "saturate(1.8) brightness(1.2)" : "none";
+
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        p.frame = (p.frame + 1) % p.frameCount;
+
+        // バリア衝突
+        let blocked = false;
+        for (const [key, s] of shields) {
+          const dx = p.x - s.x;
+          const dy = p.y - s.y;
+          if (dx * dx + dy * dy <= BARRIER_RADIUS * BARRIER_RADIUS) {
+            s.flash = FLASH_MAX;
+            blocked = true;
+            break;
+          }
+        }
+        if (blocked) {
+          projectiles.splice(i, 1);
+          continue;
+        }
+
+        const frameW = p.sprite.width / p.frameCount;
+        const frameH = p.sprite.height;
+        const sx = frameW * p.frame;
+        ctx.drawImage(
+          p.sprite,
+          sx, 0, frameW, frameH,
+          p.x - frameW / 2,
+          p.y - frameH / 2,
+          frameW, frameH
+        );
+
+        if (p.life <= 0) projectiles.splice(i, 1);
+      }
+
+      ctx.filter = "none";
+      ctx.restore();
+    }
+
+    /****************************************************
+     * バリア（□で出す：一定時間維持）
+     ****************************************************/
+    const barrierOpenSprite = new Image();
+    const barrierLoopSprite = new Image();
+    barrierOpenSprite.src = "ar_images/barrier1_1x9.png";
+    barrierLoopSprite.src = "ar_images/barrier2_1x9.png";
+
+    const BARRIER_FRAME_COUNT = 9;
+    const BARRIER_FRAME_MS = 70;
+    const BARRIER_SIZE = 320;
+    const BARRIER_RADIUS = BARRIER_SIZE * 0.45;
+    const FLASH_DECAY = 0.08;
+    const FLASH_MAX = 0.6;
+
+    // handKey -> { x,y, phase, frame, last, born, ttl, flash }
+    const shields = new Map();
+    const BARRIER_TTL_MS = 2200; // □を描いたら2.2秒くらい維持
+
+    function ensureShieldTimed(handKey, x, y, t) {
+      let s = shields.get(handKey);
+      if (!s) {
+        s = { x, y, phase: "opening", frame: 0, last: t, born: t, ttl: BARRIER_TTL_MS, flash: 0 };
+        shields.set(handKey, s);
+        return;
+      }
+      // 同じ手で再度□を描いたら位置更新＋寿命延長
+      s.x = x; s.y = y;
+      s.born = t;
+      s.ttl = BARRIER_TTL_MS;
+      // 開いていなければ開き直し
+      if (s.phase !== "holding") {
+        s.phase = "opening";
+        s.frame = 0;
+        s.last = t;
+      }
+    }
+
+    function drawBarrierFrame(ctx, img, frameIndex, cx, cy) {
+      if (!img.complete || img.naturalWidth === 0) return;
+      const frameW = img.width / BARRIER_FRAME_COUNT;
+      const frameH = img.height;
+      const sx = frameW * frameIndex;
+      const size = BARRIER_SIZE;
+      const x = cx - size / 2;
+      const y = cy - size / 2;
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.globalCompositeOperation = "screen";
+      ctx.drawImage(img, sx, 0, frameW, frameH, x, y, size, size);
+      ctx.restore();
+    }
+
+    function drawShields(ctx, t) {
+      for (const [key, s] of shields) {
+        // TTL
+        if (t - s.born > s.ttl) {
+          shields.delete(key);
+          continue;
+        }
+
+        const step = Math.floor((t - s.last) / BARRIER_FRAME_MS);
+        if (step > 0) {
+          s.last = t;
+          if (s.phase === "opening") {
+            s.frame = Math.min(BARRIER_FRAME_COUNT - 1, s.frame + step);
+            if (s.frame >= BARRIER_FRAME_COUNT - 1) {
+              s.phase = "holding";
+              s.frame = 0;
+            }
+          } else {
+            s.frame = (s.frame + step) % BARRIER_FRAME_COUNT;
+          }
+        }
+
+        const sprite = (s.phase === "opening") ? barrierOpenSprite : barrierLoopSprite;
+        drawBarrierFrame(ctx, sprite, s.frame, s.x, s.y);
+
+        // 被弾フラッシュ
+        if (s.flash > 0) {
+          ctx.save();
+          ctx.globalCompositeOperation = "screen";
+          ctx.globalAlpha = s.flash;
+          const g = ctx.createRadialGradient(s.x, s.y, BARRIER_SIZE * 0.1, s.x, s.y, BARRIER_SIZE * 0.55);
+          g.addColorStop(0, "rgba(180, 240, 255, 0.9)");
+          g.addColorStop(1, "rgba(0, 160, 255, 0)");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, BARRIER_SIZE * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          s.flash = Math.max(0, s.flash - FLASH_DECAY);
+        }
+      }
+    }
+
+    /****************************************************
+     * 呪文の軌跡（残す）＆ 形認識
+     ****************************************************/
+    const strokes = new Map();          // handKey -> { points, active }
+    const finishedStrokes = [];         // { points, label, born }
+    const STROKE_MIN_DIST = 10;
+    const STROKE_MIN_POINTS = 22;
+    const STROKE_MAX_KEEP = 18;
+    const STROKE_FADE_MS = 6500;        // 0なら永久
+    const DRAW_GRACE_FRAMES = 6; // 6フレームくらい粘る（0.1秒弱）
+    const MAX_STROKE_POINTS = 220;  
+
+
+    // --- 形→魔法 ---
+    function spellFromShape(name) {
+      if (name === "circle") return { sprite: fireSprite,    frames: FIRE_FRAME_COUNT, label: "fireball" };
+      if (name === "v")      return { sprite: waterSprite,   frames: NINE_FRAME_COUNT, label: "waterball" };
+      if (name === "z")      return { sprite: thunderSprite, frames: NINE_FRAME_COUNT, label: "thunder" };
+      if (name === "infty")  return { sprite: toxicSprite,   frames: NINE_FRAME_COUNT, label: "toxicball" };
+      return null;
+    }
+
+
+    // --- 補助：幾何特徴（○/∞を救う） ---
+    function pathLength(pts) {
+      let d = 0;
+      for (let i = 1; i < pts.length; i++) d += Math.hypot(pts[i].x - pts[i-1].x, pts[i].y - pts[i-1].y);
+      return d;
+    }
+    function bbox(pts) {
+      let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+      for (const p of pts) { minX=Math.min(minX,p.x); minY=Math.min(minY,p.y); maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y); }
+      return { minX, minY, maxX, maxY, w: maxX-minX, h: maxY-minY };
+    }
+    function centroid(pts) {
+      let x=0,y=0;
+      for (const p of pts){ x+=p.x; y+=p.y; }
+      return { x:x/pts.length, y:y/pts.length };
+    }
+    function isClosedLoop(pts) {
+      const L = pathLength(pts);
+      if (L < 1) return false;
+      const dSE = Math.hypot(pts[0].x - pts[pts.length-1].x, pts[0].y - pts[pts.length-1].y);
+      return (dSE / L) < 0.12; // 終点が始点に近い
+    }
+    function countSelfIntersections(pts) {
+      // 軽量：線分同士の交差（隣接は無視）。∞なら1回前後になりやすい
+      function segInt(a,b,c,d){
+        const det = (p,q,r,s)=> (q.x-p.x)*(s.y-r.y)-(q.y-p.y)*(s.x-r.x);
+        const d1 = det(a,b,c,d);
+        const d2 = det(a,b,c,b);
+        const d3 = det(c,d,a,b);
+        const d4 = det(c,d,a,d);
+        // しっかり実装すると長いので、簡易：向き判定の代わりにベクトル外積の符号を見る
+        // → ここは“だいたい交差を拾えればOK”
+        function orient(p,q,r){ return (q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x); }
+        const o1 = orient(a,b,c);
+        const o2 = orient(a,b,d);
+        const o3 = orient(c,d,a);
+        const o4 = orient(c,d,b);
+        if ((o1===0 && o2===0 && o3===0 && o4===0)) return false;
+        return (o1*o2 < 0) && (o3*o4 < 0);
+      }
+      let count = 0;
+      for (let i=0;i<pts.length-3;i++){
+        const a=pts[i], b=pts[i+1];
+        for (let j=i+2;j<pts.length-1;j++){
+          // 近すぎる線分は無視
+          if (Math.abs(i-j) < 8) continue;
+          const c=pts[j], d=pts[j+1];
+          if (segInt(a,b,c,d)) {
+            count++;
+            if (count >= 3) return count;
+          }
+        }
+      }
+      return count;
+    }
+
+    function downsample(pts, step = 5) {
+      const out = [];
+      for (let i = 0; i < pts.length; i += step) out.push(pts[i]);
+      if (out[out.length - 1] !== pts[pts.length - 1]) out.push(pts[pts.length - 1]);
+      return out;
+    }
+
+
+    function roundnessScore(pts) {
+      // 円っぽさ：中心からの距離のばらつきが小さいほど高い
+      const c = centroid(pts);
+      const ds = pts.map(p => Math.hypot(p.x - c.x, p.y - c.y));
+      const mean = ds.reduce((s,v)=>s+v,0)/ds.length;
+      const varr = ds.reduce((s,v)=>s+(v-mean)*(v-mean),0)/ds.length;
+      const std = Math.sqrt(varr);
+      if (mean < 1) return 0;
+      const cv = std / mean;         // ばらつき比
+      return Math.max(0, 1 - cv*2);  // ざっくり 0〜1
+    }
+
+    /*********** $1 Recognizer（テンプレ照合） ***********/
+    const Dollar1 = (() => {
+      const N = 64;
+      const SquareSize = 250;
+      const Origin = { x: 0, y: 0 };
+      const HalfDiagonal = 0.5 * Math.sqrt(2 * SquareSize * SquareSize);
+
+      function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+      function pathLen(pts) { let d=0; for (let i=1;i<pts.length;i++) d += dist(pts[i-1], pts[i]); return d; }
+
+      function resample(pts, n) {
+        const I = pathLen(pts) / (n - 1);
+        let D = 0.0;
+        const newPts = [pts[0]];
+        for (let i = 1; i < pts.length; i++) {
+          const d = dist(pts[i - 1], pts[i]);
+          if ((D + d) >= I) {
+            const t = (I - D) / d;
+            const q = { x: pts[i - 1].x + t * (pts[i].x - pts[i - 1].x),
+                        y: pts[i - 1].y + t * (pts[i].y - pts[i - 1].y) };
+            newPts.push(q);
+            pts.splice(i, 0, q);
+            D = 0.0;
+          } else D += d;
+        }
+        if (newPts.length === n - 1) newPts.push(pts[pts.length - 1]);
+        return newPts;
+      }
+
+      function centroid(pts) {
+        let x=0,y=0;
+        for (const p of pts){ x+=p.x; y+=p.y; }
+        return { x:x/pts.length, y:y/pts.length };
+      }
+      function indicativeAngle(pts) {
+        const c = centroid(pts);
+        return Math.atan2(c.y - pts[0].y, c.x - pts[0].x);
+      }
+      function rotateBy(pts, angle) {
+        const c = centroid(pts);
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        return pts.map(p => {
+          const dx = p.x - c.x, dy = p.y - c.y;
+          return { x: dx*cos - dy*sin + c.x, y: dx*sin + dy*cos + c.y };
+        });
+      }
+      function boundingBox(pts) {
+        let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+        for (const p of pts){ minX=Math.min(minX,p.x); minY=Math.min(minY,p.y); maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y); }
+        return { x:minX, y:minY, w:(maxX-minX), h:(maxY-minY) };
+      }
+      function scaleTo(pts, size) {
+        const b = boundingBox(pts);
+        const sx = b.w === 0 ? 1 : size / b.w;
+        const sy = b.h === 0 ? 1 : size / b.h;
+        return pts.map(p => ({ x: p.x * sx, y: p.y * sy }));
+      }
+      function translateTo(pts, to) {
+        const c = centroid(pts);
+        return pts.map(p => ({ x: p.x + to.x - c.x, y: p.y + to.y - c.y }));
+      }
+      function pathDistance(a, b) {
+        let d=0;
+        for (let i=0;i<a.length;i++) d += dist(a[i], b[i]);
+        return d / a.length;
+      }
+      function normalize(pts) {
+        const p = pts.map(q => ({ x:q.x, y:q.y }));
+        const r = resample(p, N);
+        const ang = indicativeAngle(r);
+        const rot = rotateBy(r, -ang);
+        const scl = scaleTo(rot, SquareSize);
+        const trn = translateTo(scl, Origin);
+        return trn;
+      }
+
+      const templates = new Map();
+      function addTemplate(name, pts) { templates.set(name, normalize(pts)); }
+
+      function recognize(pts) {
+        const cand = normalize(pts);
+        let bestName = null;
+        let bestDist = Infinity;
+        for (const [name, tmpl] of templates) {
+          const d = pathDistance(cand, tmpl);
+          if (d < bestDist) { bestDist = d; bestName = name; }
+        }
+        const score = 1.0 - (bestDist / HalfDiagonal);
+        return { name: bestName, score, bestDist };
+      }
+
+      return { addTemplate, recognize };
+    })();
+
+    // テンプレ（□も追加：バリア用）
+    function makeCirclePoints(r=100, n=80) {
+      const pts=[];
+      for (let i=0;i<n;i++){
+        const a=(i/n)*Math.PI*2;
+        pts.push({ x: Math.cos(a)*r, y: Math.sin(a)*r });
+      }
+      return pts;
+    }
+    function makeTrianglePoints(size=220) {
+      const h=size*0.9;
+      return [
+        { x: 0,       y: -h/2 },
+        { x: -size/2, y:  h/2 },
+        { x:  size/2, y:  h/2 },
+        { x: 0,       y: -h/2 },
+      ];
+    }
+    function makeZPoints(size=240) {
+      const w=size, h=size*0.75;
+      return [
+        { x:-w/2, y:-h/2 },
+        { x: w/2, y:-h/2 },
+        { x:-w/2, y: h/2 },
+        { x: w/2, y: h/2 },
+      ];
+    }
+    function makeInfinityPoints(n=120) {
+      const pts=[];
+      for (let i=0;i<n;i++){
+        const t=(i/(n-1))*Math.PI*2;
+        const x = Math.sin(t)*110;
+        const y = Math.sin(t*2)*70;
+        pts.push({x,y});
+      }
+      return pts;
+    }
+    function makeSquarePoints(size=220) {
+      const s=size/2;
+      return [
+        {x:-s,y:-s},{x:s,y:-s},{x:s,y:s},{x:-s,y:s},{x:-s,y:-s}
+      ];
+    }
+
+    Dollar1.addTemplate("circle",   makeCirclePoints());
+    Dollar1.addTemplate("triangle", makeTrianglePoints());
+    Dollar1.addTemplate("z",        makeZPoints());
+    Dollar1.addTemplate("infty",    makeInfinityPoints());
+    Dollar1.addTemplate("square",   makeSquarePoints());
+
+    function isVShape(pts) {
+      if (!pts || pts.length < 18) return false;
+
+      // バウンディングボックスがある程度の大きさ
+      const b = bbox(pts);
+      if (b.w < 60 || b.h < 60) return false;
+
+      // 閉じてるならVではない（□/○/∞候補に回す）
+      if (isClosedLoop(pts)) return false;
+
+      // 端点が高くて、真ん中が低い（Vの底が下に来る想定）
+      const start = pts[0];
+      const end = pts[pts.length - 1];
+
+      // “底”候補：yが最大の点
+      let minIdx = 0;
+      for (let i = 1; i < pts.length; i++) {
+        if (pts[i].y > pts[minIdx].y) minIdx = i;
+      }
+      const bottom = pts[minIdx];
+
+      // 底が中央寄り＆端点より下にある
+      const midX = (b.minX + b.maxX) / 2;
+      const bottomCentered = Math.abs(bottom.x - midX) < b.w * 0.25;
+      const bottomLower = (bottom.y - Math.min(start.y, end.y)) > b.h * 0.35;
+
+      if (!bottomCentered || !bottomLower) return false;
+
+      // 左→底→右 の形になってるか（端点が左右に分かれている）
+      const endsSeparated = Math.abs(start.x - end.x) > b.w * 0.45;
+      if (!endsSeparated) return false;
+
+      // 簡易：下がる→上がる の単峰形（底が途中にある）
+      const okIdx = (minIdx > pts.length * 0.2) && (minIdx < pts.length * 0.8);
+      if (!okIdx) return false;
+
+      return true;
+    }
+
+
+    // ○/∞を救う “前処理付き” 認識
+    function recognizeSpell(pts) {
+      // 0) V字（開いた形）を最優先で拾う：waterball
+      if (isVShape(pts)) {
+        return { name: "v", score: 0.9, hint: "heuristic(v)" };
+      }
+
+      const closed = isClosedLoop(pts);
+      const inter = countSelfIntersections(downsample(pts, 5));
+      const b = bbox(pts);
+      const ar = (b.h < 1) ? 999 : (b.w / b.h);
+      const round = roundnessScore(pts);
+
+      // 1) ∞：閉ループ + 交差
+      if (closed && inter >= 1 && ar > 1.15) {
+        return { name: "infty", score: 0.85, hint: `heuristic(infty) inter=${inter}` };
+      }
+
+      // 2) ○：閉ループ + 丸さ高い
+      if (closed && round > 0.58) {
+        return { name: "circle", score: Math.min(0.9, 0.6 + round*0.4), hint: `heuristic(circle) round=${round.toFixed(2)}` };
+      }
+
+      // 3) それ以外（□/Zなど）は $1
+      return Dollar1.recognize(pts);
+    }
+
+
+    function drawStrokes(ctx, tNow) {
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      // 完了線
+      ctx.lineWidth = 4;
+      for (let i = finishedStrokes.length - 1; i >= 0; i--) {
+        const s = finishedStrokes[i];
+        if (STROKE_FADE_MS > 0 && (tNow - s.born) > STROKE_FADE_MS) {
+          finishedStrokes.splice(i, 1);
+          continue;
+        }
+        const alpha = (STROKE_FADE_MS > 0)
+          ? Math.max(0, 1 - (tNow - s.born) / STROKE_FADE_MS)
+          : 1;
+        ctx.strokeStyle = `rgba(255,255,255,${0.85 * alpha})`;
+
+        const pts = s.points;
+        if (!pts || pts.length < 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let k = 1; k < pts.length; k++) ctx.lineTo(pts[k].x, pts[k].y);
+        ctx.stroke();
+
+        if (s.label) {
+          const p = pts[pts.length - 1];
+          ctx.fillStyle = `rgba(255,255,255,${0.9 * alpha})`;
+          ctx.font = "14px sans-serif";
+          ctx.fillText(s.label, p.x + 8, p.y + 8);
+        }
+      }
+
+      // 描画中
+      ctx.lineWidth = 5;
+      for (const [key, st] of strokes) {
+        if (!st.active || st.points.length < 2) continue;
+        ctx.strokeStyle = "rgba(0,255,255,0.95)";
+        ctx.beginPath();
+        ctx.moveTo(st.points[0].x, st.points[0].y);
+        for (let k = 1; k < st.points.length; k++) ctx.lineTo(st.points[k].x, st.points[k].y);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /****************************************************
+     * メイン
+     ****************************************************/
+    window.onload = async () => {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener("resize", resizeCanvas);
+
+      const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+      });
+
+      hands.onResults(onResults);
+
+      const camera = new Camera(video, {
+        onFrame: async () => { await hands.send({ image: video }); },
+        width: 640,
+        height: 480
+      });
+      camera.start();
+
+      function onResults(results) {
+        const t = performance.now();
+
+        // カメラ描画（左右反転）
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+
+        const videoW = video.videoWidth || 640;
+        const videoH = video.videoHeight || 480;
+        const scale = Math.min(canvas.width / videoW, canvas.height / videoH);
+        const drawW = videoW * scale;
+        const drawH = videoH * scale;
+        const offsetX = (canvas.width - drawW) / 2;
+        const offsetY = (canvas.height - drawH) / 2;
+
+        ctx.drawImage(video, offsetX, offsetY, drawW, drawH);
+        ctx.restore();
+
+        // エフェクト描画
+        drawProjectiles(ctx, shields);
+        drawShields(ctx, t);
+        drawStrokes(ctx, t);
+
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length) {
+          for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+            const lm = results.multiHandLandmarks[i];
+            const handedness = results.multiHandedness[i].label;
+            const states = getFingerStates(lm, handedness);
+
+            // 基準座標
+            const baseX = lm[5].x * drawW + offsetX;
+            const baseY = lm[5].y * drawH + offsetY;
+            const tipX  = lm[8].x * drawW + offsetX;
+            const tipY  = lm[8].y * drawH + offsetY;
+
+            const screenBaseX = canvas.width - baseX;
+            const screenBaseY = baseY;
+            const screenTipX  = canvas.width - tipX;
+            const screenTipY  = tipY;
+
+            const handKey = `${handedness}_${i}`;
+
+            // 方向：最後の2点から “描く向き” を優先（発射が気持ちよくなる）
+            let dirX = 0, dirY = -1;
+            const st = strokes.get(handKey);
+            if (st && st.active && st.points.length >= 2) {
+              const a = st.points[st.points.length - 2];
+              const b = st.points[st.points.length - 1];
+              dirX = b.x - a.x; dirY = b.y - a.y;
+            } else {
+              // fallback：手の向き（ベース→指先）
+              dirX = screenTipX - screenBaseX;
+              dirY = screenTipY - screenBaseY;
+            }
+            const len = Math.hypot(dirX, dirY) || 1;
+            dirX /= len; dirY /= len;
+
+            // UI（指本数表示）
+            ctx.font = "32px sans-serif";
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            ctx.strokeStyle = "rgba(0,0,0,0.7)";
+            ctx.lineWidth = 4;
+            ctx.strokeText(states.count, screenBaseX + 20, screenBaseY - 24);
+            ctx.fillText(states.count, screenBaseX + 20, screenBaseY - 24);
+
+            // 呪文描画：人差し指だけ（＝描きやすい）
+            // 本来の描画条件（人差し指だけ）
+            // --- まず s を用意（←これが先！）---
+            let s = strokes.get(handKey);
+            if (!s) { s = { points: [], active: false, grace: 0 }; strokes.set(handKey, s); }
+
+            // 本来の描画条件（人差し指だけ）
+            const wantDrawing = states.index && !states.middle && !states.ring && !states.pinky;
+
+            // 直近でwantDrawingだったら、少しだけ描画を維持
+            if (wantDrawing) s.grace = DRAW_GRACE_FRAMES;
+            else s.grace = Math.max(0, (s.grace || 0) - 1);
+
+            // 指先が動いてるなら描画を継続（瞬断しても線をつなぐ）
+            const MOVING_THRESH = 3.0; // px
+            let moving = false;
+            if (s.active && s.points.length >= 1) {
+              const last = s.points[s.points.length - 1];
+              const d = Math.hypot(screenTipX - last.x, screenTipY - last.y);
+              moving = d > MOVING_THRESH;
+            }
+
+            const isDrawing = wantDrawing || (s.active && (s.grace > 0 || moving));
+
+
+            if (isDrawing) {
+              s.active = true;
+              const p = { x: screenTipX, y: screenTipY };
+              if (s.points.length === 0) s.points.push(p);
+              else {
+                const last = s.points[s.points.length - 1];
+                const d = Math.hypot(p.x - last.x, p.y - last.y);
+                if (d >= STROKE_MIN_DIST) {
+                  s.points.push(p);
+                  if (s.points.length > MAX_STROKE_POINTS) s.points.shift(); // 上限で切る
+                }
+
+              }
+            } else {
+              // 描画終了 → 認識 → 発射 or バリア
+              if (s.active && s.points.length >= STROKE_MIN_POINTS) {
+                const recog = recognizeSpell(s.points.map(p => ({x:p.x, y:p.y})));
+
+                // 閾値は緩め目（○/∞は前処理で救う）
+                const TH = 0.67;
+
+                let label = "";
+                if (recog && recog.name && recog.score >= TH) {
+                  if (recog.name === "square") {
+                    // □：バリア（軌跡の中心に置く）
+                    const c = centroid(s.points);
+                    ensureShieldTimed(handKey, c.x, c.y, t);
+                    label = `barrier □ (${recog.score.toFixed(2)})`;
+                  } else {
+                    // 攻撃：軌跡の終点を起点に発射
+                    const spell = spellFromShape(recog.name);
+                    if (spell) {
+                      const end = s.points[s.points.length - 1];
+                      spawnProjectile(
+                        handKey,
+                        end.x, end.y,
+                        dirX, dirY,
+                        spell.sprite, spell.frames,
+                        true
+                      );
+                      label = `${spell.label} (${recog.score.toFixed(2)})`;
+                    }
+                  }
+                } else {
+                  label = `? (${recog?.score?.toFixed(2) ?? "0.00"})`;
+                }
+
+                finishedStrokes.push({ points: s.points.slice(), label, born: t });
+                while (finishedStrokes.length > STROKE_MAX_KEEP) finishedStrokes.shift();
+              }
+
+              s.active = false;
+              s.points = [];
+            }
+          }
+        } else {
+          // 手が消えたら描画中はリセット
+          for (const [k, s] of strokes) { s.active = false; s.points = []; }
+        }
+      }
+    };
+  </script>
+</body>
+</html>
