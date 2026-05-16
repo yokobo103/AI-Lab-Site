@@ -923,3 +923,22 @@ ul {
 }
 
 
+
+.notice-banner {
+  padding: 16px 0;
+  background: rgba(255, 214, 102, 0.18);
+  border-top: 1px solid rgba(255, 214, 102, 0.5);
+  border-bottom: 1px solid rgba(255, 214, 102, 0.5);
+}
+
+.notice-banner p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.notice-banner a {
+  margin-left: 8px;
+  font-weight: 800;
+}
+
+
